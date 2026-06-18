@@ -14,24 +14,43 @@
   }
   .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
 
+  /* ── Deadline banner ── */
+  .deadline-banner {
+    background: linear-gradient(90deg, #e10600, #ff4422);
+    border-radius: 12px; padding: 12px 20px;
+    margin-bottom: 16px; display: none;
+    align-items: center; gap: 12px;
+  }
+  .deadline-banner.zichtbaar { display: flex; }
+  .deadline-banner p { font-size: 14px; font-weight: 600; }
+  .deadline-banner .countdown-pill {
+    margin-left: auto; background: rgba(0,0,0,0.25);
+    border-radius: 20px; padding: 4px 14px; font-size: 13px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* ── Banner ── */
   .banner {
     background: linear-gradient(180deg, #15152a, #0d0d1c);
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    height: 170px;
-    margin-bottom: 28px;
+    border-radius: 16px; overflow: hidden; position: relative;
+    height: 170px; margin-bottom: 28px;
     border: 1px solid rgba(255,255,255,0.06);
   }
-  .banner-label {
-    position: absolute; top: 18px; left: 24px; z-index: 2;
-  }
+  .banner-label { position: absolute; top: 18px; left: 24px; z-index: 2; }
   .banner-label p { margin: 0; font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-transform: uppercase; }
   .banner-label h1 { margin: 4px 0 0; font-size: 22px; font-weight: 700; color: #fff; }
 
-  .track {
-    position: absolute; bottom: 0; left: 0; width: 100%; height: 110px;
+  .banner-countdown {
+    position: absolute; top: 18px; right: 24px; z-index: 2;
+    text-align: right;
   }
+  .banner-countdown p { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .banner-countdown .cd-boxes { display: flex; gap: 8px; }
+  .cd-box { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 10px; text-align: center; min-width: 44px; }
+  .cd-box .cd-num { font-size: 20px; font-weight: 700; line-height: 1; }
+  .cd-box .cd-lbl { font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 2px; }
+
+  .track { position: absolute; bottom: 0; left: 0; width: 100%; height: 110px; }
   .track::after {
     content: ''; position: absolute; bottom: 14px; left: 0; width: 100%; height: 2px;
     background: repeating-linear-gradient(90deg, rgba(255,255,255,0.18) 0 24px, transparent 24px 44px);
@@ -41,45 +60,69 @@
     display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
     padding-bottom: 18px;
   }
-  .leadername {
-    font-size: 22px; font-weight: 700; color: #FFD24A;
-    white-space: nowrap;
-  }
-  .nanana {
-    font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.75);
-    white-space: nowrap; font-style: italic;
-  }
+  .leadername { font-size: 22px; font-weight: 700; color: #FFD24A; white-space: nowrap; }
+  .nanana { font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.75); white-space: nowrap; font-style: italic; }
 
-  .grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px;
-  }
-  .stat-card {
-    background: #15152a; border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px; padding: 16px;
-  }
+  /* ── Stat cards ── */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card { background: #15152a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; }
   .stat-card p.label { font-size: 12px; color: rgba(255,255,255,0.5); margin: 0 0 6px; }
   .stat-card p.value { font-size: 22px; font-weight: 700; margin: 0; color: #fff; }
   .stat-card p.value.gold { color: #FFD24A; }
 
+  /* ── Podium ── */
+  .podium-wrap {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 8px; margin-bottom: 28px;
+  }
+  .podium-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .podium-naam { font-size: 12px; font-weight: 700; text-align: center; max-width: 120px; word-break: break-word; }
+  .podium-punten { font-size: 13px; color: rgba(255,255,255,0.55); }
+  .podium-blok {
+    width: 120px; border-radius: 8px 8px 0 0; display: flex;
+    align-items: center; justify-content: center; font-size: 28px;
+  }
+  .podium-1 .podium-blok { height: 90px; background: linear-gradient(180deg,#b8922a,#7a5c10); }
+  .podium-2 .podium-blok { height: 65px; background: linear-gradient(180deg,#7a7a8a,#4a4a5a); }
+  .podium-3 .podium-blok { height: 48px; background: linear-gradient(180deg,#7a4f2a,#4a2f10); }
+
+  /* ── Panels ── */
   .panel {
     background: #15152a; border: 1px solid rgba(255,255,255,0.06);
     border-radius: 16px; padding: 24px; margin-bottom: 24px;
   }
   .panel h2 { font-size: 16px; font-weight: 700; margin: 0 0 18px; color: #fff; }
 
+  /* ── Race detail panel ── */
+  #race-detail { display: none; }
+  #race-detail h2 { margin-bottom: 12px; }
+  .race-detail-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px;
+  }
+  .race-detail-item {
+    background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .race-detail-item .rd-naam { font-size: 13px; }
+  .race-detail-item .rd-pts { font-size: 15px; font-weight: 700; color: #FFD24A; }
+  .race-detail-item.top1 { border: 1px solid rgba(255,210,74,0.3); }
+
+  /* ── Grafiek hint ── */
+  .chart-hint { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px; text-align: center; }
+
+  /* ── Legenda ── */
   .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.7); }
   .legend-item {
-    display: flex; align-items: center; gap: 6px;
-    cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px; padding: 4px 10px;
-    transition: opacity 0.2s, background 0.2s;
+    border-radius: 20px; padding: 4px 10px; transition: opacity 0.2s, background 0.2s;
   }
   .legend-item:hover { background: rgba(255,255,255,0.1); }
   .legend-item.actief { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
   .legend-item.gedempt { opacity: 0.3; }
   .legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
+  /* ── Tabel ── */
   table.standings { width: 100%; border-collapse: collapse; font-size: 14px; }
   table.standings th { text-align: left; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   table.standings td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -93,26 +136,72 @@
   table.standings td.naam { cursor: pointer; }
   table.standings td.naam:hover { text-decoration: underline; }
   table.standings tr.actief-rij td { background: rgba(255,255,255,0.04); }
+
+  /* ── Speler modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #15152a; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 28px; width: 100%; max-width: 500px;
+    position: relative;
+  }
+  .modal h2 { font-size: 20px; margin-bottom: 4px; }
+  .modal .modal-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+  .modal-close {
+    position: absolute; top: 16px; right: 20px; background: none;
+    border: none; color: rgba(255,255,255,0.4); font-size: 22px; cursor: pointer;
+  }
+  .modal-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+  .modal-stat { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center; }
+  .modal-stat .ms-val { font-size: 22px; font-weight: 700; color: #FFD24A; }
+  .modal-stat .ms-lbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; text-transform: uppercase; }
+  .modal-races { display: flex; flex-direction: column; gap: 6px; }
+  .modal-race-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .modal-race-naam { color: rgba(255,255,255,0.6); width: 120px; flex-shrink: 0; }
+  .modal-race-bar-wrap { flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden; }
+  .modal-race-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .modal-race-pts { width: 36px; text-align: right; font-weight: 700; }
+
+  .footer-note { text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 30px; }
+
   @media (max-width: 600px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
     table.standings td.gap { display: none; }
     table.standings th.gap-th { display: none; }
+    .banner-countdown { display: none; }
+    .cd-box { min-width: 36px; }
+    .podium-blok { width: 90px; }
   }
-
-  .footer-note { text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 30px; }
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <div id="deadline-banner" class="deadline-banner">
+    <span>🏎️</span>
+    <p id="deadline-tekst">Race dit weekend!</p>
+    <div class="countdown-pill" id="deadline-countdown"></div>
+  </div>
 
   <div class="banner">
     <div class="banner-label">
       <p>GP Poule 2026</p>
       <h1>Live klassement</h1>
     </div>
+    <div class="banner-countdown">
+      <p id="next-race-naam">Volgende race</p>
+      <div class="cd-boxes">
+        <div class="cd-box"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">dagen</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">uur</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">min</div></div>
+      </div>
+    </div>
     <div class="track">
       <div id="car">
-        <div class="leadername" id="leader-naam">Jessiebommele5275</div>
+        <div class="leadername" id="leader-naam"></div>
         <div class="nanana">na na na na, ik ben nummer 1! 😝</div>
       </div>
     </div>
@@ -121,24 +210,32 @@
   <div class="grid">
     <div class="stat-card">
       <p class="label">Leider</p>
-      <p class="value gold" id="stat-leider">Jessiebommele5275</p>
+      <p class="value gold" id="stat-leider">—</p>
     </div>
     <div class="stat-card">
       <p class="label">Punten leider</p>
-      <p class="value" id="stat-punten">91</p>
+      <p class="value" id="stat-punten">—</p>
     </div>
     <div class="stat-card">
       <p class="label">Races gereden</p>
-      <p class="value" id="stat-races">7 / 24</p>
+      <p class="value" id="stat-races">—</p>
     </div>
   </div>
+
+  <div class="podium-wrap" id="podium"></div>
 
   <div class="panel">
     <h2>Klassement door het seizoen</h2>
     <div style="position: relative; width: 100%; height: 360px;">
-      <canvas id="poulechart" role="img" aria-label="Lijngrafiek van het puntenklassement van elke deelnemer door het seizoen heen">Klassement door het seizoen, zie tabel hieronder voor exacte standen.</canvas>
+      <canvas id="poulechart" role="img" aria-label="Lijngrafiek van het puntenklassement"></canvas>
     </div>
+    <p class="chart-hint">Klik op een race in de grafiek voor de uitslag van die race</p>
     <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel" id="race-detail">
+    <h2 id="race-detail-titel">Race uitslag</h2>
+    <div class="race-detail-grid" id="race-detail-grid"></div>
   </div>
 
   <div class="panel">
@@ -152,6 +249,21 @@
   </div>
 
   <p class="footer-note">Automatisch bijgewerkt na elke race · gppoule.nl/poule-info/16831</p>
+</div>
+
+<!-- Speler modal -->
+<div class="modal-overlay" id="speler-modal">
+  <div class="modal">
+    <button class="modal-close" id="modal-sluit">✕</button>
+    <h2 id="modal-naam"></h2>
+    <p class="modal-sub" id="modal-rang"></p>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="ms-val" id="modal-totaal"></div><div class="ms-lbl">Totaal</div></div>
+      <div class="modal-stat"><div class="ms-val" id="modal-beste"></div><div class="ms-lbl">Beste race</div></div>
+      <div class="modal-stat"><div class="ms-val" id="modal-gem"></div><div class="ms-lbl">Gemiddeld</div></div>
+    </div>
+    <div class="modal-races" id="modal-races"></div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
