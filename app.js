@@ -265,6 +265,18 @@ function toonRaceDetail(raceIndex, races, spelers) {
 
 // ─── Grafiek ──────────────────────────────────────────────────────────────────
 
+function stelCanvasGrootteIn(aantalRaces) {
+  const inner = document.querySelector('.chart-inner');
+  if (window.innerWidth <= 600) {
+    const breedte = Math.max(aantalRaces * 70, 700);
+    inner.style.width = breedte + 'px';
+    inner.style.height = '280px';
+  } else {
+    inner.style.width = '100%';
+    inner.style.height = '360px';
+  }
+}
+
 function tekenGrafiek(races, spelers) {
   const namen = Object.keys(spelers);
   const datasets = namen.map((naam, i) => ({
@@ -401,6 +413,7 @@ function animeerKart() {
   vulTabel(stand, spelers);
   vulKaarten(stand, spelers);
   vulLegende(namenInGrafiekVolgorde);
+  stelCanvasGrootteIn(races.length);
   tekenGrafiek(races, spelers);
   animeerKart();
   startCountdown();
