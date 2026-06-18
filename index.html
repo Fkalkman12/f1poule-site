@@ -122,7 +122,7 @@
   .legend-item.gedempt { opacity: 0.3; }
   .legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-  /* ── Tabel ── */
+  /* ── Tabel (desktop) ── */
   table.standings { width: 100%; border-collapse: collapse; font-size: 14px; }
   table.standings th { text-align: left; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   table.standings td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -136,6 +136,27 @@
   table.standings td.naam { cursor: pointer; }
   table.standings td.naam:hover { text-decoration: underline; }
   table.standings tr.actief-rij td { background: rgba(255,255,255,0.04); }
+
+  /* ── Speler kaartjes (mobiel) ── */
+  .speler-kaarten { display: none; flex-direction: column; gap: 10px; }
+  .speler-kaart {
+    background: rgba(255,255,255,0.04); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; border: 1px solid rgba(255,255,255,0.06);
+    border-left: 4px solid var(--kleur);
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .speler-kaart:active { background: rgba(255,255,255,0.08); }
+  .speler-kaart.actief-rij { background: rgba(255,255,255,0.07); border-left-color: var(--kleur); }
+  .sk-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .sk-plek { font-size: 20px; width: 32px; flex-shrink: 0; }
+  .sk-naam { font-size: 15px; font-weight: 600; flex: 1; }
+  .sk-pts { font-size: 20px; font-weight: 700; color: var(--kleur); }
+  .sk-bottom { display: flex; align-items: center; gap: 10px; }
+  .sk-bar-wrap { flex: 1; background: rgba(255,255,255,0.08); border-radius: 4px; height: 6px; }
+  .sk-bar { height: 6px; border-radius: 4px; background: var(--kleur); transition: width 0.4s; }
+  .sk-laaste { font-size: 12px; font-weight: 700; color: #7CC576; white-space: nowrap; }
+  .sk-gap { font-size: 12px; color: rgba(255,255,255,0.35); white-space: nowrap; }
 
   /* ── Speler modal ── */
   .modal-overlay {
@@ -170,9 +191,8 @@
   @media (max-width: 600px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
     .grid .stat-card:last-child { grid-column: span 2; }
-    table.standings td.gap { display: none; }
-    table.standings th.gap-th { display: none; }
-    table.standings td.laaste { font-size: 11px; }
+    table.standings { display: none; }
+    .speler-kaarten { display: flex; }
     .banner-countdown { display: none; }
     .leadername { font-size: 16px; }
     .nanana { font-size: 13px; }
@@ -257,6 +277,7 @@
       </thead>
       <tbody id="standings-body"></tbody>
     </table>
+    <div class="speler-kaarten" id="speler-kaarten"></div>
   </div>
 
   <p class="footer-note">Automatisch bijgewerkt na elke race · gppoule.nl/poule-info/16831</p>

@@ -157,6 +157,35 @@ function vulTabel(stand, spelers) {
   });
 }
 
+function vulKaarten(stand, spelers) {
+  const wrap = document.getElementById('speler-kaarten');
+  wrap.innerHTML = '';
+  const leiderPunten = stand[0].punten;
+  stand.forEach((s, i) => {
+    const kleur = kleurVoorNaam(s.naam, spelers);
+    const breedte = Math.round((s.punten / leiderPunten) * 100);
+    const kaart = document.createElement('div');
+    kaart.className = 'speler-kaart';
+    kaart.dataset.naam = s.naam;
+    kaart.style.setProperty('--kleur', kleur);
+    const gapTekst = s.gap === 0 ? 'leider' : `${s.gap}pt`;
+    kaart.innerHTML = `
+      <div class="sk-top">
+        <span class="sk-plek">${MEDAILLES[i] ?? i + 1}</span>
+        <span class="sk-naam">${s.naam}</span>
+        <span class="sk-pts">${s.punten}</span>
+      </div>
+      <div class="sk-bottom">
+        <div class="sk-bar-wrap"><div class="sk-bar" style="width:${breedte}%"></div></div>
+        <span class="sk-laaste">+${s.laasteRace}</span>
+        <span class="sk-gap">${gapTekst}</span>
+      </div>
+    `;
+    kaart.addEventListener('click', () => openSpelerModal(s.naam, stand, spelers));
+    wrap.appendChild(kaart);
+  });
+}
+
 function pasTabelAan() {
   document.querySelectorAll('#standings-body tr').forEach(tr => {
     const naam = tr.dataset.naam;
@@ -370,6 +399,7 @@ function animeerKart() {
   vulStats(races);
   vulPodium(stand);
   vulTabel(stand, spelers);
+  vulKaarten(stand, spelers);
   vulLegende(namenInGrafiekVolgorde);
   tekenGrafiek(races, spelers);
   animeerKart();
