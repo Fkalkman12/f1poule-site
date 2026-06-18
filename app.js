@@ -1,538 +1,641 @@
-const KLEUREN = ['#FFD24A', '#5B9BD5', '#E06B5C', '#7CC576', '#C97FE0', '#8C8C8C', '#E0A05B', '#5CCFC9', '#D55B9B', '#9BA8D5', '#C9C95C'];
-const PATRONEN = [[], [6,3], [2,2], [8,3,2,3], [4,4], [10,2], [1,4], [6,2,2,2], [3,3], [12,4], [5,5,2,5]];
-const MEDAILLES = ['🥇', '🥈', '🥉'];
+// F1 Poule 2026 — app.js
 
-// 2026 resterende racekalender (UTC race start tijden)
 const KALENDER = [
-  { naam: 'Oostenrijk',       datum: new Date('2026-06-28T13:00:00Z') },
-  { naam: 'Groot-Brittannië', datum: new Date('2026-07-05T14:00:00Z') },
-  { naam: 'België',           datum: new Date('2026-07-19T13:00:00Z') },
-  { naam: 'Hongarije',        datum: new Date('2026-07-26T13:00:00Z') },
-  { naam: 'Nederland',        datum: new Date('2026-08-23T13:00:00Z') },
-  { naam: 'Italië',           datum: new Date('2026-09-06T13:00:00Z') },
-  { naam: 'Spanje (Madrid)',  datum: new Date('2026-09-13T13:00:00Z') },
-  { naam: 'Azerbeidzjan',     datum: new Date('2026-09-26T11:00:00Z') },
-  { naam: 'Singapore',        datum: new Date('2026-10-11T12:00:00Z') },
-  { naam: 'Verenigde Staten', datum: new Date('2026-10-25T19:00:00Z') },
-  { naam: 'Mexico',           datum: new Date('2026-11-01T20:00:00Z') },
-  { naam: 'Brazilië',         datum: new Date('2026-11-08T17:00:00Z') },
-  { naam: 'Las Vegas',        datum: new Date('2026-11-22T06:00:00Z') },
-  { naam: 'Qatar',            datum: new Date('2026-11-29T16:00:00Z') },
-  { naam: 'Abu Dhabi',        datum: new Date('2026-12-06T13:00:00Z') },
+  { naam: 'Oostenrijk',    datum: new Date('2026-06-28T13:00:00Z') },
+  { naam: 'Silverstone',   datum: new Date('2026-07-05T14:00:00Z') },
+  { naam: 'Hongarije',     datum: new Date('2026-07-19T13:00:00Z') },
+  { naam: 'Belgie',        datum: new Date('2026-07-26T13:00:00Z') },
+  { naam: 'Nederland',     datum: new Date('2026-08-30T13:00:00Z') },
+  { naam: 'Monza',         datum: new Date('2026-09-06T13:00:00Z') },
+  { naam: 'Azerbeidzjan',  datum: new Date('2026-09-20T11:00:00Z') },
+  { naam: 'Singapore',     datum: new Date('2026-10-04T09:00:00Z') },
+  { naam: 'Texas',         datum: new Date('2026-10-18T19:00:00Z') },
+  { naam: 'Mexico',        datum: new Date('2026-10-25T20:00:00Z') },
+  { naam: 'Sao Paulo',     datum: new Date('2026-11-08T17:00:00Z') },
+  { naam: 'Las Vegas',     datum: new Date('2026-11-21T06:00:00Z') },
+  { naam: 'Qatar',         datum: new Date('2026-11-29T13:00:00Z') },
+  { naam: 'Abu Dhabi',     datum: new Date('2026-12-06T13:00:00Z') },
 ];
 
-let grafiek = null;
-let actieveSpelers = new Set();
+const KLEUREN = [
+  '#E10600','#FFD24A','#7CC576','#5B9BD5','#FF7F50',
+  '#B39DDB','#4DB6AC','#FF8A65','#90A4AE','#F06292','#A5D6A7',
+];
 
-// ─── Data helpers ─────────────────────────────────────────────────────────────
+// ── Hulpfuncties ──────────────────────────────────────────────
 
-function bepaalStand(spelers, races) {
-  const laatsteIdx = races.length - 1;
-  const vorigeIdx = races.length - 2;
-  return Object.entries(spelers)
-    .map(([naam, punten]) => ({
-      naam,
-      punten: punten[laatsteIdx],
-      laasteRace: vorigeIdx >= 0 ? punten[laatsteIdx] - punten[vorigeIdx] : punten[laatsteIdx],
-    }))
-    .sort((a, b) => b.punten - a.punten)
-    .map((s, i, arr) => ({ ...s, plek: i + 1, gap: i === 0 ? 0 : s.punten - arr[0].punten }));
+function kleurVoor(naam) {
+  const namen = Object.keys(POULE_DATA.spelers);
+  return KLEUREN[namen.indexOf(naam) % KLEUREN.length];
 }
 
-function puntenPerRace(naam, spelers) {
-  const cumulatief = spelers[naam];
-  return cumulatief.map((p, i) => i === 0 ? p : p - cumulatief[i - 1]);
+function stand() {
+  const n = POULE_DATA.races.length;
+  return Object.entries(POULE_DATA.spelers)
+    .map(([naam, punten]) => ({ naam, punten: punten[n - 1] || 0 }))
+    .sort((a, b) => b.punten - a.punten);
 }
 
-function kleurVoorNaam(naam, spelers) {
-  const idx = Object.keys(spelers).indexOf(naam);
-  return KLEUREN[idx % KLEUREN.length];
+function puntenPerRace(naam) {
+  const reeks = POULE_DATA.spelers[naam];
+  return reeks.map((p, i) => i === 0 ? p : p - reeks[i - 1]);
 }
 
-// ─── Countdown ────────────────────────────────────────────────────────────────
-
-function volgendeRace() {
-  const nu = new Date();
-  return KALENDER.find(r => r.datum > nu) || null;
+function kortNaam(naam) {
+  return naam.replace(/\d+$/, '').trim();
 }
+
+// ── Tabs ──────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('actief'));
+    document.querySelectorAll('.tab-inhoud').forEach(t => t.classList.remove('actief'));
+    btn.classList.add('actief');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('actief');
+    if (btn.dataset.tab === 'grafiek' && !grafiekGemaakt) maakGrafiek();
+    if (btn.dataset.tab === 'vergelijk') vulH2H();
+  });
+});
+
+// ── Countdown ──────────────────────────────────────────────────
 
 function startCountdown() {
-  const race = volgendeRace();
-  if (!race) return;
+  const nu = new Date();
+  const volgende = KALENDER.find(r => r.datum > nu);
+  if (!volgende) {
+    document.getElementById('next-race-naam').textContent = 'Seizoen voorbij 🏁';
+    return;
+  }
+  document.getElementById('next-race-naam').textContent = volgende.naam;
+  function tick() {
+    const diff = volgende.datum - new Date();
+    if (diff <= 0) { startCountdown(); return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('cd-d').textContent = d;
+    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+  }
+  tick();
+  setInterval(tick, 30000);
+}
 
-  document.getElementById('next-race-naam').textContent = race.naam;
+// ── Deadline banner ────────────────────────────────────────────
 
-  // Deadline banner: toon als race binnen 7 dagen is
-  const msOver = race.datum - new Date();
-  const dagenOver = msOver / (1000 * 60 * 60 * 24);
-  if (dagenOver <= 7) {
+function checkDeadlineBanner() {
+  const nu = new Date();
+  const volgende = KALENDER.find(r => r.datum > nu);
+  if (!volgende) return;
+  const kwal = new Date(volgende.datum.getTime() - 24 * 3600000);
+  const diff = kwal - nu;
+  if (diff > 0 && diff < 48 * 3600000) {
     const banner = document.getElementById('deadline-banner');
     banner.classList.add('zichtbaar');
     document.getElementById('deadline-tekst').textContent =
-      `🏁 ${race.naam} komt eraan — vul je poule in voor de race start!`;
-  }
-
-  function tick() {
-    const nu = new Date();
-    const diff = race.datum - nu;
-    if (diff <= 0) {
-      document.getElementById('cd-d').textContent = '0';
-      document.getElementById('cd-h').textContent = '0';
-      document.getElementById('cd-m').textContent = '0';
-      document.getElementById('deadline-countdown').textContent = 'Race is begonnen!';
-      return;
+      `Kwalificatie ${volgende.naam} begint binnenkort — vergeet niet te voorspellen!`;
+    function tickDeadline() {
+      const d2 = kwal - new Date();
+      if (d2 <= 0) { banner.classList.remove('zichtbaar'); return; }
+      const hh = Math.floor(d2 / 3600000);
+      const mm = Math.floor((d2 % 3600000) / 60000);
+      const ss = Math.floor((d2 % 60000) / 1000);
+      document.getElementById('deadline-countdown').textContent =
+        `${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
     }
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-    document.getElementById('cd-d').textContent = d;
-    document.getElementById('cd-h').textContent = String(h).padStart(2, '0');
-    document.getElementById('cd-m').textContent = String(m).padStart(2, '0');
-    document.getElementById('deadline-countdown').textContent =
-      `${d}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  }
-  tick();
-  setInterval(tick, 1000);
-}
-
-// ─── Extra stats ──────────────────────────────────────────────────────────────
-
-function vulGrootsteStijger(spelers, races) {
-  if (races.length < 2) return;
-  const vIdx = races.length - 2, lIdx = races.length - 1;
-
-  const voor = Object.entries(spelers)
-    .map(([naam, p]) => ({ naam, punten: p[vIdx] }))
-    .sort((a, b) => b.punten - a.punten)
-    .map((s, i) => ({ ...s, plek: i + 1 }));
-
-  const na = Object.entries(spelers)
-    .map(([naam, p]) => ({ naam, punten: p[lIdx] }))
-    .sort((a, b) => b.punten - a.punten)
-    .map((s, i) => ({ ...s, plek: i + 1 }));
-
-  let beste = null, besteDelta = -Infinity;
-  na.forEach(s => {
-    const v = voor.find(x => x.naam === s.naam);
-    const delta = (v?.plek ?? 0) - s.plek;
-    if (delta > besteDelta) { besteDelta = delta; beste = { naam: s.naam, delta }; }
-  });
-
-  if (beste) {
-    document.getElementById('stat-stijger').textContent = beste.naam;
-    document.getElementById('stat-stijger-sub').textContent =
-      beste.delta > 0 ? `+${beste.delta} plek${beste.delta !== 1 ? 'ken' : ''}` : 'Zelfde positie';
+    tickDeadline();
+    setInterval(tickDeadline, 1000);
   }
 }
 
-function vulAchtervolger(spelers, races) {
-  if (races.length < 2) return;
-  const stand = bepaalStand(spelers, races);
-  const leider = stand[0];
-  const aantalCheck = Math.min(3, races.length - 1);
+// ── Banner animatie ───────────────────────────────────────────
 
-  // Score = combinatie van hoe dichtbij én hoeveel ingelopen
-  // Alleen spelers binnen 30pt van de leider tellen mee
-  let bestScore = -Infinity, achtervolger = null;
-  stand.slice(1).forEach(s => {
-    const gapNu = leider.punten - s.punten;
-    const leiderVroeger = spelers[leider.naam][races.length - 1 - aantalCheck];
-    const puntenVroeger = spelers[s.naam][races.length - 1 - aantalCheck];
-    const gapToen = leiderVroeger - puntenVroeger;
-    const inhaal = gapToen - gapNu;
+function animeerKart() {
+  const huidig = stand()[0];
+  const el = document.getElementById('car');
+  const leader = document.getElementById('leader-naam');
+  if (leader && huidig) leader.textContent = '🏎️  ' + kortNaam(huidig.naam);
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  const breedte = Math.min(window.innerWidth, 960);
+  const style = document.getElementById('kart-keyframe') || document.createElement('style');
+  style.id = 'kart-keyframe';
+  style.textContent = `@keyframes rijden {
+    0%   { transform: translateX(-400px); }
+    100% { transform: translateX(${breedte + 100}px); }
+  }`;
+  if (!document.getElementById('kart-keyframe')) document.head.appendChild(style);
+  el.style.animation = 'rijden 18s linear infinite';
+}
 
-    // Combineer: ingelopen punten min straf voor grote achterstand
-    const score = inhaal - (gapNu * 0.3);
-    if (score > bestScore) { bestScore = score; achtervolger = { naam: s.naam, inhaal, gapNu }; }
+// ── Stat cards ────────────────────────────────────────────────
+
+function vulStatCards() {
+  const s = stand();
+  const leider = s[0];
+  document.getElementById('stat-leider').textContent = kortNaam(leider.naam);
+  document.getElementById('stat-punten').textContent = leider.punten + ' pt';
+  document.getElementById('stat-races').textContent = POULE_DATA.races.length;
+  vulGrootsteStijger();
+  vulAchtervolger();
+}
+
+function vulGrootsteStijger() {
+  const n = POULE_DATA.races.length;
+  if (n < 2) return;
+  let beste = null, besteWinst = -Infinity;
+  Object.entries(POULE_DATA.spelers).forEach(([naam, punten]) => {
+    const winst = punten[n - 1] - punten[n - 2];
+    if (winst > besteWinst) { besteWinst = winst; beste = naam; }
   });
-
-  if (achtervolger) {
-    document.getElementById('stat-achtervolger').textContent = achtervolger.naam;
-    document.getElementById('stat-achtervolger-sub').textContent =
-      `${achtervolger.inhaal > 0 ? `${achtervolger.inhaal}pt ingelopen` : 'gap gelijk'} · nog ${achtervolger.gapNu}pt achter`;
-  }
+  document.getElementById('stat-stijger').textContent = kortNaam(beste);
+  document.getElementById('stat-stijger-sub').textContent =
+    `+${besteWinst} pt in ${POULE_DATA.races[n - 1]}`;
 }
 
-function vulPrognose(spelers, races) {
-  const totaal = 24;
-  const gereden = races.length;
-  const lijst = document.getElementById('prognose-lijst');
-  lijst.innerHTML = '';
-
-  const prognoses = Object.entries(spelers)
-    .map(([naam, punten]) => ({
-      naam,
-      huidig: punten[gereden - 1],
-      prognose: Math.round((punten[gereden - 1] / gereden) * totaal),
-    }))
-    .sort((a, b) => b.prognose - a.prognose);
-
-  const maxPts = prognoses[0].prognose;
-  prognoses.forEach((s, i) => {
-    const kleur = kleurVoorNaam(s.naam, spelers);
-    const breedte = Math.round((s.prognose / maxPts) * 100);
-    const rij = document.createElement('div');
-    rij.className = 'prognose-rij';
-    rij.innerHTML = `
-      <span class="prognose-plek">${MEDAILLES[i] ?? i + 1}</span>
-      <span class="prognose-naam">${s.naam}</span>
-      <div class="prognose-bar-wrap"><div class="prognose-bar" style="width:${breedte}%;background:${kleur}"></div></div>
-      <span class="prognose-pts">${s.prognose}pt</span>
-      <span class="prognose-huidig">${s.huidig}nu</span>
-    `;
-    lijst.appendChild(rij);
+function vulAchtervolger() {
+  const s = stand();
+  const n = POULE_DATA.races.length;
+  if (s.length < 2 || n < 2) return;
+  const leiderPunten = s[0].punten;
+  let beste = null, besteScore = -Infinity;
+  s.slice(1).forEach(({ naam, punten }) => {
+    const reeks = POULE_DATA.spelers[naam];
+    const inhaal = (reeks[n - 1] - reeks[n - 2]) - (POULE_DATA.spelers[s[0].naam][n - 1] - POULE_DATA.spelers[s[0].naam][n - 2]);
+    const gap = leiderPunten - punten;
+    const score = inhaal - gap * 0.3;
+    if (score > besteScore) { besteScore = score; beste = naam; }
   });
+  const gap = leiderPunten - POULE_DATA.spelers[beste][n - 1];
+  document.getElementById('stat-achtervolger').textContent = kortNaam(beste);
+  document.getElementById('stat-achtervolger-sub').textContent = `${gap} pt achter op ${kortNaam(s[0].naam)}`;
 }
 
-function vulHeadToHead(spelers, races) {
-  const namen = Object.keys(spelers);
-  const s1El = document.getElementById('h2h-speler1');
-  const s2El = document.getElementById('h2h-speler2');
+// ── Podium ────────────────────────────────────────────────────
 
-  namen.forEach((naam, i) => {
-    const o1 = new Option(naam, naam);
-    const o2 = new Option(naam, naam);
-    s1El.appendChild(o1);
-    s2El.appendChild(o2);
-  });
-  s2El.selectedIndex = 1;
-
-  function render() {
-    const n1 = s1El.value, n2 = s2El.value;
-    if (n1 === n2) { document.getElementById('h2h-resultaat').innerHTML = '<p style="color:rgba(255,255,255,0.3);font-size:13px">Kies twee verschillende spelers</p>'; return; }
-
-    const p1 = spelers[n1], p2 = spelers[n2];
-    const kleur1 = kleurVoorNaam(n1, spelers), kleur2 = kleurVoorNaam(n2, spelers);
-
-    let wins1 = 0, wins2 = 0;
-    const perRace1 = p1.map((v, i) => i === 0 ? v : v - p1[i-1]);
-    const perRace2 = p2.map((v, i) => i === 0 ? v : v - p2[i-1]);
-    perRace1.forEach((pts, i) => { if (pts > perRace2[i]) wins1++; else if (perRace2[i] > pts) wins2++; });
-
-    const html = `
-      <div class="h2h-score">
-        <div class="h2h-naam-score">
-          <div class="hs-naam" style="color:${kleur1}">${n1}</div>
-          <div class="hs-wins" style="color:${kleur1}">${wins1}</div>
-        </div>
-        <div class="h2h-scheiding">—</div>
-        <div class="h2h-naam-score">
-          <div class="hs-naam" style="color:${kleur2}">${n2}</div>
-          <div class="hs-wins" style="color:${kleur2}">${wins2}</div>
-        </div>
-      </div>
-      <div class="h2h-races">
-        ${races.map((race, i) => {
-          const pts1 = perRace1[i], pts2 = perRace2[i];
-          const max = Math.max(pts1, pts2, 1);
-          const w1 = Math.round((pts1/max)*50), w2 = Math.round((pts2/max)*50);
-          const winnaar = pts1 > pts2 ? `style="font-weight:700;color:${kleur1}"` : pts2 > pts1 ? `style="font-weight:700;color:${kleur2}"` : '';
-          return `<div class="h2h-race-rij">
-            <span class="h2h-race-naam">${race}</span>
-            <span class="h2h-race-pts1" style="color:${kleur1}">+${pts1}</span>
-            <div class="h2h-bar-wrap">
-              <div class="h2h-bar1" style="width:${w1}%;background:${kleur1}"></div>
-              <div class="h2h-bar2" style="width:${w2}%;background:${kleur2}"></div>
-            </div>
-            <span class="h2h-race-pts2" style="color:${kleur2}">+${pts2}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    `;
-    document.getElementById('h2h-resultaat').innerHTML = html;
-  }
-
-  s1El.addEventListener('change', render);
-  s2El.addEventListener('change', render);
-  render();
+function vulPodium() {
+  const s = stand();
+  const [p1, p2, p3] = s;
+  const volgorde = [p2, p1, p3];
+  const klassen = ['podium-2','podium-1','podium-3'];
+  const emojis = ['🥈','🥇','🥉'];
+  document.getElementById('podium').innerHTML = volgorde.map((p, i) => `
+    <div class="podium-item ${klassen[i]}">
+      <div class="podium-naam">${kortNaam(p.naam)}</div>
+      <div class="podium-punten">${p.punten} pt</div>
+      <div class="podium-blok">${emojis[i]}</div>
+    </div>`).join('');
 }
 
-// ─── Confetti ─────────────────────────────────────────────────────────────────
+// ── Klassement tabel + kaartjes ───────────────────────────────
 
-function vuurConfetti() {
-  if (typeof confetti === 'undefined') return;
-  confetti({ particleCount: 80, spread: 70, origin: { y: 0.3 }, colors: ['#FFD24A', '#e10600', '#ffffff'] });
-  setTimeout(() => confetti({ particleCount: 40, spread: 50, origin: { x: 0.1, y: 0.4 }, colors: ['#FFD24A'] }), 300);
-  setTimeout(() => confetti({ particleCount: 40, spread: 50, origin: { x: 0.9, y: 0.4 }, colors: ['#FFD24A'] }), 500);
-}
+function vulStand() {
+  const s = stand();
+  const leider = s[0].punten;
+  const n = POULE_DATA.races.length;
 
-// ─── Banner ───────────────────────────────────────────────────────────────────
+  document.getElementById('standings-body').innerHTML = s.map((sp, i) => {
+    const laaste = n > 0 ? puntenPerRace(sp.naam)[n - 1] : 0;
+    const gap = i === 0 ? '—' : '-' + (leider - sp.punten);
+    const rij = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+    const medaille = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
+    return `<tr class="${rij}">
+      <td class="pos">${i + 1}</td>
+      <td class="naam" onclick="openSpelerModal('${sp.naam.replace(/'/g,"\\'")}')">
+        ${medaille}${kortNaam(sp.naam)}
+      </td>
+      <td class="pts">${sp.punten}</td>
+      <td class="gap">${gap}</td>
+      <td class="laaste" style="color:${laaste > 0 ? '#7CC576' : 'rgba(255,255,255,0.35)'}">
+        ${laaste > 0 ? '+' + laaste : '—'}
+      </td>
+    </tr>`;
+  }).join('');
 
-function vulBanner(leider) {
-  document.getElementById('leader-naam').textContent = leider.naam;
-  document.getElementById('stat-leider').textContent = leider.naam;
-  document.getElementById('stat-punten').textContent = leider.punten;
-}
-
-function vulStats(races) {
-  document.getElementById('stat-races').textContent = `${races.length} / 24`;
-}
-
-// ─── Podium ───────────────────────────────────────────────────────────────────
-
-function vulPodium(stand) {
-  const wrap = document.getElementById('podium');
-  const volgorde = [stand[1], stand[0], stand[2]]; // 2e, 1e, 3e
-  const hoogtes = [1, 0, 2]; // index in stand
-  wrap.innerHTML = '';
-  volgorde.forEach((s, i) => {
-    if (!s) return;
-    const div = document.createElement('div');
-    div.className = `podium-item podium-${hoogtes[i] + 1}`;
-    div.innerHTML = `
-      <div class="podium-naam">${s.naam}</div>
-      <div class="podium-punten">${s.punten}pt</div>
-      <div class="podium-blok">${MEDAILLES[s.plek - 1]}</div>
-    `;
-    wrap.appendChild(div);
-  });
-}
-
-// ─── Tabel ────────────────────────────────────────────────────────────────────
-
-function vulTabel(stand, spelers) {
-  const body = document.getElementById('standings-body');
-  body.innerHTML = '';
-  stand.forEach(s => {
-    const tr = document.createElement('tr');
-    tr.dataset.naam = s.naam;
-    if (s.plek === 1) tr.className = 'top1';
-    else if (s.plek === 2) tr.className = 'top2';
-    else if (s.plek === 3) tr.className = 'top3';
-
-    const medaille = MEDAILLES[s.plek - 1] ?? s.plek;
-    const gapTekst = s.gap === 0 ? '—' : s.gap;
-    const laasteKleur = s.laasteRace > 0 ? '#7CC576' : 'rgba(255,255,255,0.55)';
-
-    tr.innerHTML = `
-      <td class="pos">${medaille}</td>
-      <td class="naam">${s.naam}</td>
-      <td class="pts">${s.punten}</td>
-      <td class="gap">${gapTekst}</td>
-      <td class="laaste" style="color:${laasteKleur}">+${s.laasteRace}</td>
-    `;
-    tr.querySelector('.naam').addEventListener('click', () => openSpelerModal(s.naam, stand, spelers));
-    body.appendChild(tr);
-  });
-}
-
-function vulKaarten(stand, spelers) {
-  const wrap = document.getElementById('speler-kaarten');
-  wrap.innerHTML = '';
-  const leiderPunten = stand[0].punten;
-  stand.forEach((s, i) => {
-    const kleur = kleurVoorNaam(s.naam, spelers);
-    const breedte = Math.round((s.punten / leiderPunten) * 100);
-    const kaart = document.createElement('div');
-    kaart.className = 'speler-kaart';
-    kaart.dataset.naam = s.naam;
-    kaart.style.setProperty('--kleur', kleur);
-    const gapTekst = s.gap === 0 ? 'leider' : `${s.gap}pt`;
-    kaart.innerHTML = `
+  document.getElementById('speler-kaarten').innerHTML = s.map((sp, i) => {
+    const laaste = n > 0 ? puntenPerRace(sp.naam)[n - 1] : 0;
+    const kleur = kleurVoor(sp.naam);
+    const pct = Math.round(sp.punten / leider * 100);
+    const medaille = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    const gap = i === 0 ? '' : `<span class="sk-gap">-${leider - sp.punten}</span>`;
+    return `<div class="speler-kaart" style="--kleur:${kleur}" onclick="openSpelerModal('${sp.naam.replace(/'/g,"\\'")}')">
       <div class="sk-top">
-        <span class="sk-plek">${MEDAILLES[i] ?? i + 1}</span>
-        <span class="sk-naam">${s.naam}</span>
-        <span class="sk-pts">${s.punten}</span>
+        <div class="sk-plek">${medaille}</div>
+        <div class="sk-naam">${kortNaam(sp.naam)}</div>
+        <div class="sk-pts">${sp.punten}</div>
       </div>
       <div class="sk-bottom">
-        <div class="sk-bar-wrap"><div class="sk-bar" style="width:${breedte}%"></div></div>
-        <span class="sk-laaste">+${s.laasteRace}</span>
-        <span class="sk-gap">${gapTekst}</span>
+        <div class="sk-bar-wrap"><div class="sk-bar" style="width:${pct}%"></div></div>
+        ${laaste > 0 ? `<span class="sk-laaste">+${laaste}</span>` : ''}
+        ${gap}
       </div>
-    `;
-    kaart.addEventListener('click', () => openSpelerModal(s.naam, stand, spelers));
-    wrap.appendChild(kaart);
-  });
+    </div>`;
+  }).join('');
 }
 
-function pasTabelAan() {
-  document.querySelectorAll('#standings-body tr').forEach(tr => {
-    const naam = tr.dataset.naam;
-    const niemandActief = actieveSpelers.size === 0;
-    tr.classList.toggle('actief-rij', !niemandActief && actieveSpelers.has(naam));
-  });
-}
+// ── Grafiek ───────────────────────────────────────────────────
 
-// ─── Legenda ──────────────────────────────────────────────────────────────────
+let grafiekGemaakt = false;
+let grafiekInstantie = null;
+const actieveSpelers = new Set(Object.keys(POULE_DATA.spelers));
 
-function vulLegende(namen) {
-  const legend = document.getElementById('legend');
-  legend.innerHTML = '';
-  namen.forEach((naam, i) => {
-    const kleur = KLEUREN[i % KLEUREN.length];
-    const item = document.createElement('div');
-    item.className = 'legend-item';
-    item.dataset.naam = naam;
-    item.innerHTML = `<span class="dot" style="background:${kleur}"></span>${naam}`;
-    item.addEventListener('click', () => toggleSpeler(naam));
-    legend.appendChild(item);
-  });
-}
-
-function pasLegendaAan() {
-  document.querySelectorAll('.legend-item').forEach(el => {
-    const naam = el.dataset.naam;
-    const niemandActief = actieveSpelers.size === 0;
-    el.classList.toggle('actief', actieveSpelers.has(naam));
-    el.classList.toggle('gedempt', !niemandActief && !actieveSpelers.has(naam));
-  });
-}
-
-// ─── Grafiek toggle ───────────────────────────────────────────────────────────
-
-function toggleSpeler(naam) {
-  if (actieveSpelers.has(naam)) actieveSpelers.delete(naam);
-  else actieveSpelers.add(naam);
-  pasGrafiekAan();
-  pasLegendaAan();
-  pasTabelAan();
-}
-
-function pasGrafiekAan() {
-  if (!grafiek) return;
-  const niemandActief = actieveSpelers.size === 0;
-  grafiek.data.datasets.forEach((ds, i) => {
-    grafiek.setDatasetVisibility(i, niemandActief || actieveSpelers.has(ds.label));
-  });
-  grafiek.update();
-}
-
-// ─── Race detail panel ────────────────────────────────────────────────────────
-
-function toonRaceDetail(raceIndex, races, spelers) {
-  const racenaam = races[raceIndex];
-  const resultaten = Object.entries(spelers)
-    .map(([naam, punten]) => ({
-      naam,
-      punten: raceIndex === 0 ? punten[0] : punten[raceIndex] - punten[raceIndex - 1],
-    }))
-    .sort((a, b) => b.punten - a.punten);
-
-  document.getElementById('race-detail-titel').textContent = `📊 ${racenaam} — race punten`;
-  const grid = document.getElementById('race-detail-grid');
-  grid.innerHTML = '';
-  resultaten.forEach((r, i) => {
-    const div = document.createElement('div');
-    div.className = `race-detail-item${i === 0 ? ' top1' : ''}`;
-    div.innerHTML = `<span class="rd-naam">${MEDAILLES[i] ?? (i+1)+'.'} ${r.naam}</span><span class="rd-pts">+${r.punten}</span>`;
-    grid.appendChild(div);
-  });
-
-  document.getElementById('race-detail').style.display = 'block';
-  document.getElementById('race-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ─── Grafiek ──────────────────────────────────────────────────────────────────
-
-function stelCanvasGrootteIn(aantalRaces) {
-  const inner = document.querySelector('.chart-inner');
+function maakGrafiek() {
+  grafiekGemaakt = true;
+  const canvas = document.getElementById('poulechart');
+  const wrap = canvas.parentElement;
   if (window.innerWidth <= 600) {
-    const breedte = Math.max(aantalRaces * 70, 700);
-    inner.style.width = breedte + 'px';
-    inner.style.height = '280px';
-  } else {
-    inner.style.width = '100%';
-    inner.style.height = '360px';
+    wrap.style.width = '700px';
+    canvas.style.width = '700px';
   }
-}
-
-function tekenGrafiek(races, spelers) {
-  const namen = Object.keys(spelers);
-  const datasets = namen.map((naam, i) => ({
-    label: naam,
-    data: spelers[naam],
-    borderColor: KLEUREN[i % KLEUREN.length],
-    backgroundColor: KLEUREN[i % KLEUREN.length],
-    borderDash: PATRONEN[i % PATRONEN.length],
-    borderWidth: 2,
-    pointRadius: 4,
-    pointHoverRadius: 7,
-    tension: 0.3,
-    fill: false,
-  }));
-
-  grafiek = new Chart(document.getElementById('poulechart'), {
+  const namen = Object.keys(POULE_DATA.spelers);
+  grafiekInstantie = new Chart(canvas, {
     type: 'line',
-    data: { labels: races, datasets },
+    data: {
+      labels: POULE_DATA.races,
+      datasets: namen.map(naam => ({
+        label: naam,
+        data: POULE_DATA.spelers[naam],
+        borderColor: kleurVoor(naam),
+        backgroundColor: kleurVoor(naam) + '22',
+        borderWidth: 2.5,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        tension: 0.3,
+        fill: false,
+      }))
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      onClick: (evt, elements) => {
-        if (!elements.length) return;
-        const raceIndex = elements[0].index;
-        toonRaceDetail(raceIndex, races, spelers);
-      },
-      layout: { padding: { bottom: 8 } },
+      animation: { duration: 600 },
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const naam = ctx.dataset.label;
-              const idx = ctx.dataIndex;
-              const cum = ctx.parsed.y;
-              const perRace = idx === 0 ? cum : cum - spelers[naam][idx - 1];
-              return `${naam}: ${cum}pt (+${perRace} deze race)`;
-            }
-          }
-        }
+        tooltip: { callbacks: { label: ctx => ` ${kortNaam(ctx.dataset.label)}: ${ctx.parsed.y} pt` } }
       },
       scales: {
-        y: {
-          title: { display: true, text: 'Punten', color: 'rgba(255,255,255,0.5)' },
-          beginAtZero: true,
-          ticks: { color: 'rgba(255,255,255,0.5)' },
-          grid: { color: 'rgba(255,255,255,0.06)' }
-        },
-        x: {
-          ticks: { color: 'rgba(255,255,255,0.5)' },
-          grid: { color: 'rgba(255,255,255,0.06)' }
-        }
+        x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 11 } } },
+      },
+      onClick: (evt, elements) => {
+        if (elements.length === 0) return;
+        toonRaceDetail(elements[0].index);
       }
     }
   });
+  vulLegend(namen);
 }
 
-// ─── Speler modal ─────────────────────────────────────────────────────────────
+function vulLegend(namen) {
+  document.getElementById('legend').innerHTML = namen.map(naam => {
+    const kleur = kleurVoor(naam);
+    return `<div class="legend-item actief" data-naam="${naam}" onclick="toggleSpeler('${naam.replace(/'/g,"\\'")}')">
+      <span class="dot" style="background:${kleur}"></span>${kortNaam(naam)}
+    </div>`;
+  }).join('');
+}
 
-function openSpelerModal(naam, stand, spelers) {
-  const puntenArr = spelers[naam];
-  const perRace = puntenArr.map((p, i) => i === 0 ? p : p - puntenArr[i - 1]);
-  const totaal = puntenArr[puntenArr.length - 1];
+function toggleSpeler(naam) {
+  actieveSpelers.has(naam) ? actieveSpelers.delete(naam) : actieveSpelers.add(naam);
+  grafiekInstantie.data.datasets.forEach(ds => { ds.hidden = !actieveSpelers.has(ds.label); });
+  grafiekInstantie.update();
+  document.querySelectorAll('.legend-item').forEach(el => {
+    const actief = actieveSpelers.has(el.dataset.naam);
+    el.classList.toggle('actief', actief);
+    el.classList.toggle('gedempt', !actief);
+  });
+}
+
+function toonRaceDetail(raceIdx) {
+  const racenaam = POULE_DATA.races[raceIdx];
+  const uitslagen = Object.entries(POULE_DATA.spelers).map(([naam, punten]) => ({
+    naam, pts: raceIdx === 0 ? punten[0] : punten[raceIdx] - punten[raceIdx - 1]
+  })).sort((a, b) => b.pts - a.pts);
+  document.getElementById('race-detail-titel').textContent = `Uitslag: ${racenaam}`;
+  document.getElementById('race-detail-grid').innerHTML = uitslagen.map((u, i) => `
+    <div class="race-detail-item ${i === 0 ? 'top1' : ''}">
+      <span class="rd-naam">${i === 0 ? '🏆 ' : ''}${kortNaam(u.naam)}</span>
+      <span class="rd-pts">+${u.pts}</span>
+    </div>`).join('');
+  document.getElementById('race-detail').style.display = 'block';
+}
+
+// ── Stats tab ─────────────────────────────────────────────────
+
+function vulStats() {
+  vulStreak();
+  vulDarkHorse();
+  vulTrivia();
+  vulPrognose();
+}
+
+function berekenStreaks() {
+  const n = POULE_DATA.races.length;
+  const namen = Object.keys(POULE_DATA.spelers);
+  const winnaarPerRace = POULE_DATA.races.map((_, i) => {
+    let beste = null, besteP = -1;
+    namen.forEach(naam => {
+      const p = i === 0 ? POULE_DATA.spelers[naam][0] : POULE_DATA.spelers[naam][i] - POULE_DATA.spelers[naam][i - 1];
+      if (p > besteP) { besteP = p; beste = naam; }
+    });
+    return beste;
+  });
+  const maxStreaks = {};
+  namen.forEach(naam => {
+    let cur = 0, max = 0;
+    for (let i = 0; i < n; i++) {
+      if (winnaarPerRace[i] === naam) { cur++; max = Math.max(max, cur); } else cur = 0;
+    }
+    maxStreaks[naam] = max;
+  });
+  // Huidige streak van de winnaar van de laatste race
+  const huidigWinnaar = winnaarPerRace[n - 1];
+  let huidigStreak = 0;
+  for (let i = n - 1; i >= 0 && winnaarPerRace[i] === huidigWinnaar; i--) huidigStreak++;
+  return { winnaarPerRace, maxStreaks, huidigWinnaar, huidigStreak };
+}
+
+function vulStreak() {
+  const { huidigWinnaar, huidigStreak, maxStreaks } = berekenStreaks();
+  const wrap = document.getElementById('streak-wrap');
+  if (huidigStreak >= 2) {
+    wrap.innerHTML = `<div class="streak-banner">
+      <div class="streak-fire">🔥</div>
+      <div class="streak-tekst">
+        <h3>${kortNaam(huidigWinnaar)} is on fire!</h3>
+        <p>${huidigStreak} races op rij gewonnen — niemand houdt hem/haar tegen!</p>
+      </div>
+    </div>`;
+  } else {
+    const [topNaam, topStreak] = Object.entries(maxStreaks).sort((a, b) => b[1] - a[1])[0];
+    wrap.innerHTML = topStreak >= 2 ? `<div class="streak-banner">
+      <div class="streak-fire">🏆</div>
+      <div class="streak-tekst">
+        <h3>Beste seizoen-streak: ${kortNaam(topNaam)}</h3>
+        <p>${topStreak} races op rij gewonnen dit seizoen!</p>
+      </div>
+    </div>` : '';
+  }
+}
+
+function vulDarkHorse() {
+  const n = POULE_DATA.races.length;
+  if (n < 2) return;
+  const namen = Object.keys(POULE_DATA.spelers);
+  let beste = null, besteOver = -Infinity;
+  namen.forEach(naam => {
+    const perRace = puntenPerRace(naam);
+    const gem = perRace.slice(0, n - 1).reduce((a, b) => a + b, 0) / (n - 1);
+    const over = perRace[n - 1] - gem;
+    if (over > besteOver) { besteOver = over; beste = naam; }
+  });
+  document.getElementById('darkhorse-wrap').innerHTML = `<div class="darkhorse-kaart">
+    <div class="darkhorse-icon">🐴</div>
+    <div class="darkhorse-tekst">
+      <h3>Dark horse: ${kortNaam(beste)}</h3>
+      <p>Scoorde ${besteOver.toFixed(1)} pt boven zijn/haar gemiddelde in ${POULE_DATA.races[n - 1]}!</p>
+    </div>
+  </div>`;
+}
+
+function vulTrivia() {
+  const namen = Object.keys(POULE_DATA.spelers);
+  const n = POULE_DATA.races.length;
+  const s = stand();
+  const { winnaarPerRace } = berekenStreaks();
+  const feiten = [];
+
+  const winsPerSpeler = {};
+  namen.forEach(naam => { winsPerSpeler[naam] = 0; });
+  winnaarPerRace.forEach(w => { winsPerSpeler[w]++; });
+  const [topW, topN] = Object.entries(winsPerSpeler).sort((a, b) => b[1] - a[1])[0];
+  if (topN > 0) feiten.push(`<span>${kortNaam(topW)}</span> won de meeste races: <span>${topN}×</span> 🏆`);
+  feiten.push(`De allereerste race (${POULE_DATA.races[0]}) werd gewonnen door <span>${kortNaam(winnaarPerRace[0])}</span>.`);
+  feiten.push(`<span>${kortNaam(s[0].naam)}</span> leidt met <span>${s[0].punten - s[1].punten} pt</span> voorsprong op nummer 2.`);
+
+  let slechtNaam = null, slechtPts = Infinity, slechtRace = '';
+  namen.forEach(naam => {
+    puntenPerRace(naam).forEach((p, i) => {
+      if (p < slechtPts) { slechtPts = p; slechtNaam = naam; slechtRace = POULE_DATA.races[i]; }
+    });
+  });
+  if (slechtNaam) feiten.push(`Slechtste race ooit: <span>${kortNaam(slechtNaam)}</span> scoorde <span>${slechtPts} pt</span> in ${slechtRace} 💀`);
+
+  let consistentNaam = null, laagsteStd = Infinity;
+  namen.forEach(naam => {
+    const perRace = puntenPerRace(naam);
+    const gem = perRace.reduce((a, b) => a + b, 0) / perRace.length;
+    const std = Math.sqrt(perRace.reduce((a, b) => a + (b - gem) ** 2, 0) / perRace.length);
+    if (std < laagsteStd) { laagsteStd = std; consistentNaam = naam; }
+  });
+  feiten.push(`<span>${kortNaam(consistentNaam)}</span> is de meest consistente speler dit seizoen.`);
+
+  document.getElementById('trivia-lijst').innerHTML = feiten.map(f =>
+    `<div class="trivia-item">💡 ${f}</div>`).join('');
+}
+
+function vulPrognose() {
+  const n = POULE_DATA.races.length;
+  const totaal = 24;
+  const s = stand();
+  const prognoses = s.map(sp => ({
+    naam: sp.naam,
+    huidig: sp.punten,
+    prognose: Math.round((sp.punten / n) * totaal)
+  })).sort((a, b) => b.prognose - a.prognose);
+  const maxP = prognoses[0].prognose;
+  document.getElementById('prognose-lijst').innerHTML = prognoses.map((p, i) => `
+    <div class="prognose-rij">
+      <span class="prognose-plek">${i + 1}</span>
+      <span class="prognose-naam">${kortNaam(p.naam)}</span>
+      <div class="prognose-bar-wrap"><div class="prognose-bar" style="width:${Math.round(p.prognose/maxP*100)}%;background:${kleurVoor(p.naam)}"></div></div>
+      <span class="prognose-pts">${p.prognose}</span>
+      <span class="prognose-huidig">(${p.huidig})</span>
+    </div>`).join('');
+}
+
+// ── Head-to-head ─────────────────────────────────────────────
+
+let h2hGemaakt = false;
+
+function vulH2H() {
+  const namen = Object.keys(POULE_DATA.spelers);
+  const s1 = document.getElementById('h2h-speler1');
+  const s2 = document.getElementById('h2h-speler2');
+  if (!h2hGemaakt) {
+    namen.forEach(naam => {
+      [s1, s2].forEach(sel => {
+        const o = document.createElement('option');
+        o.value = naam; o.textContent = kortNaam(naam);
+        sel.appendChild(o);
+      });
+    });
+    s1.selectedIndex = 0;
+    s2.selectedIndex = 1;
+    s1.addEventListener('change', renderH2H);
+    s2.addEventListener('change', renderH2H);
+    h2hGemaakt = true;
+  }
+  renderH2H();
+}
+
+function renderH2H() {
+  const naam1 = document.getElementById('h2h-speler1').value;
+  const naam2 = document.getElementById('h2h-speler2').value;
+  if (naam1 === naam2) {
+    document.getElementById('h2h-resultaat').innerHTML = '<p style="color:rgba(255,255,255,0.4);text-align:center;padding:20px">Kies twee verschillende spelers</p>';
+    return;
+  }
+  const k1 = kleurVoor(naam1), k2 = kleurVoor(naam2);
+  const pp1 = puntenPerRace(naam1), pp2 = puntenPerRace(naam2);
+  let wins1 = 0, wins2 = 0;
+  POULE_DATA.races.forEach((_, i) => {
+    if (pp1[i] > pp2[i]) wins1++;
+    else if (pp2[i] > pp1[i]) wins2++;
+  });
+  const rijen = POULE_DATA.races.map((race, i) => {
+    const p1 = pp1[i], p2 = pp2[i];
+    const tot = p1 + p2 || 1;
+    const w1 = Math.round(p1 / tot * 100), w2 = 100 - w1;
+    const win1 = p1 > p2, win2 = p2 > p1;
+    return `<div class="h2h-race-rij">
+      <span class="h2h-race-naam">${race}</span>
+      <span class="h2h-race-pts1" style="color:${win1 ? k1 : 'rgba(255,255,255,0.4)'}">${p1}</span>
+      <div class="h2h-bar-wrap">
+        <div class="h2h-bar1" style="width:${w1}%;background:${k1}${win1 ? '' : '55'}"></div>
+        <div class="h2h-bar2" style="width:${w2}%;background:${k2}${win2 ? '' : '55'}"></div>
+      </div>
+      <span class="h2h-race-pts2" style="color:${win2 ? k2 : 'rgba(255,255,255,0.4)'}">${p2}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('h2h-resultaat').innerHTML = `
+    <div class="h2h-score">
+      <div class="h2h-naam-score">
+        <div class="hs-naam" style="color:${k1}">${kortNaam(naam1)}</div>
+        <div class="hs-wins" style="color:${k1}">${wins1}</div>
+      </div>
+      <span class="h2h-scheiding">—</span>
+      <div class="h2h-naam-score">
+        <div class="hs-naam" style="color:${k2}">${kortNaam(naam2)}</div>
+        <div class="hs-wins" style="color:${k2}">${wins2}</div>
+      </div>
+    </div>
+    <div class="h2h-races">${rijen}</div>`;
+}
+
+// ── Badges ────────────────────────────────────────────────────
+
+function vulBadges() {
+  const namen = Object.keys(POULE_DATA.spelers);
+  const n = POULE_DATA.races.length;
+  const s = stand();
+  const { winnaarPerRace, maxStreaks } = berekenStreaks();
+  const badges = [];
+
+  // 👑 Leider
+  badges.push({ emoji: '👑', naam: 'Leider', winnaar: s[0].naam, omschr: 'Staat momenteel bovenaan het klassement.' });
+
+  // 🏆 Meeste race wins
+  const wpp = {};
+  namen.forEach(naam => { wpp[naam] = 0; });
+  winnaarPerRace.forEach(w => { wpp[w]++; });
+  const [topW, topN] = Object.entries(wpp).sort((a, b) => b[1] - a[1])[0];
+  badges.push({ emoji: '🏆', naam: 'Race Koning/Koningin', winnaar: topW, omschr: `Won ${topN} van ${n} races dit seizoen.` });
+
+  // ⚡ Sprint specialist
+  const sprintIdx = POULE_DATA.races.map((r, i) => r.toLowerCase().includes('sprint') ? i : -1).filter(i => i >= 0);
+  if (sprintIdx.length > 0) {
+    let sprintKing = null, sprintGem = -Infinity;
+    namen.forEach(naam => {
+      const perRace = puntenPerRace(naam);
+      const gem = sprintIdx.reduce((a, i) => a + perRace[i], 0) / sprintIdx.length;
+      if (gem > sprintGem) { sprintGem = gem; sprintKing = naam; }
+    });
+    badges.push({ emoji: '⚡', naam: 'Sprint Killer', winnaar: sprintKing, omschr: `Beste gemiddelde op sprint races (${sprintGem.toFixed(1)} pt/race).` });
+  }
+
+  // 📈 Beste losse race
+  let comebackNaam = null, comebackPts = -Infinity, comebackRace = '';
+  namen.forEach(naam => {
+    puntenPerRace(naam).forEach((p, i) => {
+      if (p > comebackPts) { comebackPts = p; comebackNaam = naam; comebackRace = POULE_DATA.races[i]; }
+    });
+  });
+  badges.push({ emoji: '📈', naam: 'Race MVP', winnaar: comebackNaam, omschr: `Beste race ooit: ${comebackPts} pt in ${comebackRace}.` });
+
+  // 💀 Zwarte dag
+  let slechtNaam = null, slechtPts = Infinity, slechtRace = '';
+  namen.forEach(naam => {
+    puntenPerRace(naam).forEach((p, i) => {
+      if (p < slechtPts) { slechtPts = p; slechtNaam = naam; slechtRace = POULE_DATA.races[i]; }
+    });
+  });
+  badges.push({ emoji: '💀', naam: 'Zwarte Dag', winnaar: slechtNaam, omschr: `Slechtste race: slechts ${slechtPts} pt in ${slechtRace}. Oeps!` });
+
+  // 🔥 Langste streak
+  const [streakNaam, streakN] = Object.entries(maxStreaks).sort((a, b) => b[1] - a[1])[0];
+  badges.push({ emoji: '🔥', naam: 'On Fire', winnaar: streakNaam, omschr: `Langste race-streak: ${streakN} races op rij gewonnen.` });
+
+  // 🎯 Consistent
+  let consistentNaam = null, laagsteStd = Infinity;
+  namen.forEach(naam => {
+    const perRace = puntenPerRace(naam);
+    const gem = perRace.reduce((a, b) => a + b, 0) / perRace.length;
+    const std = Math.sqrt(perRace.reduce((a, b) => a + (b - gem) ** 2, 0) / perRace.length);
+    if (std < laagsteStd) { laagsteStd = std; consistentNaam = naam; }
+  });
+  badges.push({ emoji: '🎯', naam: 'Metronoom', winnaar: consistentNaam, omschr: 'Meest consistente scores — altijd solide, nooit instorten.' });
+
+  // 🚀 Raketstart
+  let startNaam = null, startPts = -Infinity;
+  namen.forEach(naam => {
+    const p = POULE_DATA.spelers[naam][0];
+    if (p > startPts) { startPts = p; startNaam = naam; }
+  });
+  badges.push({ emoji: '🚀', naam: 'Raketstart', winnaar: startNaam, omschr: `Won de allereerste race (${POULE_DATA.races[0]}) met ${startPts} pt.` });
+
+  // 📊 Beste prognose
+  const prognoseTopNaam = namen.map(naam => ({
+    naam, prognose: Math.round((POULE_DATA.spelers[naam][n - 1] / n) * 24)
+  })).sort((a, b) => b.prognose - a.prognose)[0];
+  badges.push({ emoji: '📊', naam: 'Toekomstig Kampioen', winnaar: prognoseTopNaam.naam, omschr: `Beste seizoenprognose: ~${prognoseTopNaam.prognose} pt bij 24 races.` });
+
+  document.getElementById('badges-grid').innerHTML = badges.map(b => `
+    <div class="badge-kaart">
+      <div class="badge-emoji">${b.emoji}</div>
+      <div class="badge-naam">${b.naam}</div>
+      <div class="badge-winnaar">${kortNaam(b.winnaar)}</div>
+      <div class="badge-omschr">${b.omschr}</div>
+    </div>`).join('');
+}
+
+// ── Speler modal ──────────────────────────────────────────────
+
+function openSpelerModal(naam) {
+  const s = stand();
+  const plek = s.findIndex(sp => sp.naam === naam) + 1;
+  const reeks = POULE_DATA.spelers[naam];
+  const perRace = puntenPerRace(naam);
+  const kleur = kleurVoor(naam);
+  const totaal = reeks[reeks.length - 1];
   const beste = Math.max(...perRace);
-  const gem = Math.round(totaal / puntenArr.length);
-  const spelerStand = stand.find(s => s.naam === naam);
-  const kleur = kleurVoorNaam(naam, spelers);
-  const maxPerRace = Math.max(...Object.values(spelers).flatMap((p, i) =>
-    p.map((v, j) => j === 0 ? v : v - p[j-1])
-  ));
+  const gem = (perRace.reduce((a, b) => a + b, 0) / perRace.length).toFixed(1);
+  const maxPts = Math.max(...perRace);
 
-  document.getElementById('modal-naam').textContent = naam;
-  document.getElementById('modal-rang').textContent = `${MEDAILLES[spelerStand.plek-1] ?? '#'+spelerStand.plek} ${spelerStand.plek}e plaats · ${totaal} punten totaal`;
+  document.getElementById('modal-naam').textContent = kortNaam(naam);
+  document.getElementById('modal-rang').textContent = `#${plek} in het klassement`;
   document.getElementById('modal-totaal').textContent = totaal;
-  document.getElementById('modal-beste').textContent = `+${beste}`;
-  document.getElementById('modal-gem').textContent = `+${gem}`;
-
-  const { races } = POULE_DATA;
-  const racesDiv = document.getElementById('modal-races');
-  racesDiv.innerHTML = '';
-  races.forEach((race, i) => {
-    const pts = perRace[i];
-    const breedte = Math.round((pts / maxPerRace) * 100);
-    const row = document.createElement('div');
-    row.className = 'modal-race-row';
-    row.innerHTML = `
+  document.getElementById('modal-beste').textContent = beste;
+  document.getElementById('modal-gem').textContent = gem;
+  document.getElementById('modal-races').innerHTML = POULE_DATA.races.map((race, i) => `
+    <div class="modal-race-row">
       <span class="modal-race-naam">${race}</span>
       <div class="modal-race-bar-wrap">
-        <div class="modal-race-bar" style="width:${breedte}%;background:${kleur}"></div>
+        <div class="modal-race-bar" style="width:${Math.round(perRace[i]/maxPts*100)}%;background:${kleur}"></div>
       </div>
-      <span class="modal-race-pts">+${pts}</span>
-    `;
-    racesDiv.appendChild(row);
-  });
-
+      <span class="modal-race-pts">+${perRace[i]}</span>
+    </div>`).join('');
   document.getElementById('speler-modal').classList.add('open');
 }
 
@@ -543,44 +646,27 @@ document.getElementById('speler-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
-// ─── Kart animatie ────────────────────────────────────────────────────────────
+// ── Confetti ──────────────────────────────────────────────────
 
-function animeerKart() {
-  const car = document.getElementById('car');
-  const track = car.closest('.track');
-
-  function rijden() {
-    const breedte = track.offsetWidth + 380;
-    car.style.transition = 'none';
-    car.style.left = '-400px';
-    void car.offsetLeft;
-    car.style.transition = 'left 14s linear';
-    car.style.left = breedte + 'px';
-    setTimeout(rijden, 14500);
-  }
-  rijden();
+function vuurConfetti() {
+  if (typeof confetti === 'undefined') return;
+  const kleuren = ['#E10600','#FFD24A','#fff'];
+  confetti({ particleCount: 100, spread: 80, origin: { y: 0.4 }, colors: kleuren });
+  setTimeout(() => confetti({ particleCount: 60, spread: 120, origin: { y: 0.5 }, colors: kleuren }), 500);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────
 
-(function init() {
-  const { races, spelers } = POULE_DATA;
-  const stand = bepaalStand(spelers, races);
-  const namenInGrafiekVolgorde = Object.keys(spelers);
-
-  vulBanner(stand[0]);
-  vulStats(races);
-  vulGrootsteStijger(spelers, races);
-  vulAchtervolger(spelers, races);
-  vulPodium(stand);
-  vulTabel(stand, spelers);
-  vulKaarten(stand, spelers);
-  vulLegende(namenInGrafiekVolgorde);
-  stelCanvasGrootteIn(races.length);
-  tekenGrafiek(races, spelers);
-  vulPrognose(spelers, races);
-  vulHeadToHead(spelers, races);
-  animeerKart();
+function init() {
   startCountdown();
-  setTimeout(vuurConfetti, 1200);
-})();
+  checkDeadlineBanner();
+  vulStatCards();
+  vulPodium();
+  vulStand();
+  vulStats();
+  vulBadges();
+  animeerKart();
+  setTimeout(vuurConfetti, 800);
+}
+
+init();
