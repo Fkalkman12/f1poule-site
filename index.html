@@ -169,11 +169,22 @@
 
   @media (max-width: 600px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
+    .grid .stat-card:last-child { grid-column: span 2; }
     table.standings td.gap { display: none; }
     table.standings th.gap-th { display: none; }
+    table.standings td.laaste { font-size: 11px; }
     .banner-countdown { display: none; }
-    .cd-box { min-width: 36px; }
-    .podium-blok { width: 90px; }
+    .leadername { font-size: 16px; }
+    .nanana { font-size: 13px; }
+    .podium-blok { width: 80px; }
+    .podium-naam { font-size: 11px; max-width: 80px; }
+    .podium-punten { font-size: 11px; }
+    .modal { padding: 20px 16px; }
+    .modal-stats { grid-template-columns: repeat(3,1fr); gap: 6px; }
+    .modal-stat .ms-val { font-size: 18px; }
+    .modal-race-naam { width: 90px; font-size: 11px; }
+    #poulechart { height: 280px !important; }
+    .panel { padding: 16px; }
   }
 </style>
 </head>
@@ -226,7 +237,7 @@
 
   <div class="panel">
     <h2>Klassement door het seizoen</h2>
-    <div style="position: relative; width: 100%; height: 360px;">
+    <div style="position: relative; width: 100%; height: 360px; padding-bottom: 8px;">
       <canvas id="poulechart" role="img" aria-label="Lijngrafiek van het puntenklassement"></canvas>
     </div>
     <p class="chart-hint">Klik op een race in de grafiek voor de uitslag van die race</p>

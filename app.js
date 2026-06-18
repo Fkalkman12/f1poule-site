@@ -262,6 +262,7 @@ function tekenGrafiek(races, spelers) {
         const raceIndex = elements[0].index;
         toonRaceDetail(raceIndex, races, spelers);
       },
+      layout: { padding: { bottom: 8 } },
       plugins: {
         legend: { display: false },
         tooltip: {
