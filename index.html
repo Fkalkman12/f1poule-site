@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 Poule 2026 — Live klassement</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a14;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .banner {
+    background: linear-gradient(180deg, #15152a, #0d0d1c);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    height: 170px;
+    margin-bottom: 28px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .banner-label {
+    position: absolute; top: 18px; left: 24px; z-index: 2;
+  }
+  .banner-label p { margin: 0; font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-transform: uppercase; }
+  .banner-label h1 { margin: 4px 0 0; font-size: 22px; font-weight: 700; color: #fff; }
+
+  .track {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 110px;
+  }
+  .track::after {
+    content: ''; position: absolute; bottom: 14px; left: 0; width: 100%; height: 2px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.18) 0 24px, transparent 24px 44px);
+  }
+  #car {
+    position: absolute; bottom: 0; left: -400px; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding-bottom: 18px;
+  }
+  .leadername {
+    font-size: 22px; font-weight: 700; color: #FFD24A;
+    white-space: nowrap;
+  }
+  .nanana {
+    font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.75);
+    white-space: nowrap; font-style: italic;
+  }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: #15152a; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 16px;
+  }
+  .stat-card p.label { font-size: 12px; color: rgba(255,255,255,0.5); margin: 0 0 6px; }
+  .stat-card p.value { font-size: 22px; font-weight: 700; margin: 0; color: #fff; }
+  .stat-card p.value.gold { color: #FFD24A; }
+
+  .panel {
+    background: #15152a; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 24px; margin-bottom: 24px;
+  }
+  .panel h2 { font-size: 16px; font-weight: 700; margin: 0 0 18px; color: #fff; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer; user-select: none;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 4px 10px;
+    transition: opacity 0.2s, background 0.2s;
+  }
+  .legend-item:hover { background: rgba(255,255,255,0.1); }
+  .legend-item.actief { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+  .legend-item.gedempt { opacity: 0.3; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  table.standings { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.standings th { text-align: left; font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  table.standings td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  table.standings tr.top1 td { color: #FFD24A; font-weight: 700; }
+  table.standings tr.top2 td { color: #d6d6e0; font-weight: 700; }
+  table.standings tr.top3 td { color: #d2935f; font-weight: 700; }
+  table.standings td.pos { width: 40px; color: rgba(255,255,255,0.4); }
+  table.standings td.pts { text-align: right; font-weight: 700; }
+  table.standings td.gap { text-align: right; color: rgba(255,255,255,0.4); font-size: 12px; }
+  table.standings td.laaste { text-align: right; font-size: 12px; color: rgba(255,255,255,0.55); }
+  table.standings td.naam { cursor: pointer; }
+  table.standings td.naam:hover { text-decoration: underline; }
+  table.standings tr.actief-rij td { background: rgba(255,255,255,0.04); }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    table.standings td.gap { display: none; }
+    table.standings th.gap-th { display: none; }
+  }
+
+  .footer-note { text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <div class="banner-label">
+      <p>GP Poule 2026</p>
+      <h1>Live klassement</h1>
+    </div>
+    <div class="track">
+      <div id="car">
+        <div class="leadername" id="leader-naam">Jessiebommele5275</div>
+        <div class="nanana">na na na na, ik ben nummer 1! 😝</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="stat-card">
+      <p class="label">Leider</p>
+      <p class="value gold" id="stat-leider">Jessiebommele5275</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Punten leider</p>
+      <p class="value" id="stat-punten">91</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Races gereden</p>
+      <p class="value" id="stat-races">7 / 24</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Klassement door het seizoen</h2>
+    <div style="position: relative; width: 100%; height: 360px;">
+      <canvas id="poulechart" role="img" aria-label="Lijngrafiek van het puntenklassement van elke deelnemer door het seizoen heen">Klassement door het seizoen, zie tabel hieronder voor exacte standen.</canvas>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Huidige stand</h2>
+    <table class="standings" id="standings-table">
+      <thead>
+        <tr><th>Plek</th><th>Naam</th><th style="text-align:right">Punten</th><th class="gap-th" style="text-align:right">Gap</th><th style="text-align:right">Laatste race</th></tr>
+      </thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
+
+  <p class="footer-note">Automatisch bijgewerkt na elke race · gppoule.nl/poule-info/16831</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

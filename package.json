@@ -1,0 +1,8 @@
+{
+  "name": "f1poule-site",
+  "version": "1.0.0",
+  "description": "F1 Poule 2026 – live klassement website",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
