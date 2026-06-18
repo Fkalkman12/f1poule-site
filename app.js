@@ -133,20 +133,25 @@ function vulAchtervolger(spelers, races) {
   const leider = stand[0];
   const aantalCheck = Math.min(3, races.length - 1);
 
-  let besteInhaal = -Infinity, achtervolger = null;
+  // Score = combinatie van hoe dichtbij én hoeveel ingelopen
+  // Alleen spelers binnen 30pt van de leider tellen mee
+  let bestScore = -Infinity, achtervolger = null;
   stand.slice(1).forEach(s => {
     const gapNu = leider.punten - s.punten;
-    const puntenVroeger = spelers[s.naam][races.length - 1 - aantalCheck];
     const leiderVroeger = spelers[leider.naam][races.length - 1 - aantalCheck];
+    const puntenVroeger = spelers[s.naam][races.length - 1 - aantalCheck];
     const gapToen = leiderVroeger - puntenVroeger;
     const inhaal = gapToen - gapNu;
-    if (inhaal > besteInhaal) { besteInhaal = inhaal; achtervolger = { naam: s.naam, inhaal, gapNu }; }
+
+    // Combineer: ingelopen punten min straf voor grote achterstand
+    const score = inhaal - (gapNu * 0.3);
+    if (score > bestScore) { bestScore = score; achtervolger = { naam: s.naam, inhaal, gapNu }; }
   });
 
   if (achtervolger) {
     document.getElementById('stat-achtervolger').textContent = achtervolger.naam;
     document.getElementById('stat-achtervolger-sub').textContent =
-      `${achtervolger.inhaal > 0 ? `+${achtervolger.inhaal}pt ingelopen` : 'gap gelijk'} · nog ${achtervolger.gapNu}pt achter`;
+      `${achtervolger.inhaal > 0 ? `${achtervolger.inhaal}pt ingelopen` : 'gap gelijk'} · nog ${achtervolger.gapNu}pt achter`;
   }
 }
 
