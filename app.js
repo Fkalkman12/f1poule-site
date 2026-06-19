@@ -321,13 +321,150 @@ function toonRaceDetail(raceIdx) {
   document.getElementById('race-detail').style.display = 'block';
 }
 
+// ── Seizoensoverzicht ─────────────────────────────────────────
+
+function vulSeizoenOverzicht() {
+  const n = POULE_DATA.races.length;
+  const totaalRaces = 24;
+  const s = stand();
+  const namen = Object.keys(POULE_DATA.spelers);
+  const gemPuntenPerRace = namen.reduce((acc, naam) => {
+    return acc + POULE_DATA.spelers[naam][n - 1];
+  }, 0) / namen.length / n;
+  const resterend = totaalRaces - n;
+  const hoogste = Math.max(...namen.map(naam => {
+    const pp = puntenPerRace(naam);
+    return Math.max(...pp);
+  }));
+
+  document.getElementById('seizoen-overzicht').innerHTML = `
+    <div class="seizoen-stat"><div class="so-val">${n}</div><div class="so-lbl">Races gespeeld</div></div>
+    <div class="seizoen-stat"><div class="so-val">${resterend}</div><div class="so-lbl">Races te gaan</div></div>
+    <div class="seizoen-stat"><div class="so-val">${gemPuntenPerRace.toFixed(1)}</div><div class="so-lbl">Gem. pt/race poule</div></div>
+    <div class="seizoen-stat"><div class="so-val">${hoogste}</div><div class="so-lbl">Beste losse race</div></div>`;
+}
+
+// ── Tijdlijn ──────────────────────────────────────────────────
+
+function vulTijdlijn() {
+  const gespeeld = POULE_DATA.races;
+  const komend = KALENDER.map(k => k.naam);
+  const alle = [...gespeeld, ...komend.filter(k => !gespeeld.includes(k))];
+  const nu = new Date();
+  const volgendeIdx = gespeeld.length; // eerste ongespeelde
+
+  document.getElementById('tijdlijn').innerHTML = alle.map((naam, i) => {
+    const gedaan = i < gespeeld.length;
+    const huidig = i === volgendeIdx;
+    const klasse = gedaan ? 'gedaan' : huidig ? 'huidig' : 'komend';
+    const icon = gedaan ? '✓' : huidig ? '▶' : '';
+    return `<div class="tijdlijn-race">
+      <div class="tijdlijn-dot ${klasse}">${icon}</div>
+      <div class="tijdlijn-naam ${klasse}">${naam}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Race reactie ──────────────────────────────────────────────
+
+function vulReactie() {
+  const n = POULE_DATA.races.length;
+  if (n === 0) return;
+  const s = stand();
+  const { winnaarPerRace } = berekenStreaks();
+  const laaste = POULE_DATA.races[n - 1];
+  const winnaar = winnaarPerRace[n - 1];
+  const winPunten = puntenPerRace(winnaar)[n - 1];
+
+  // Wie verloor het meest?
+  const namen = Object.keys(POULE_DATA.spelers);
+  const [verliezer] = namen.map(naam => ({
+    naam, pts: puntenPerRace(naam)[n - 1]
+  })).sort((a, b) => a.pts - b.pts);
+
+  const templates = [
+    `🏁 <span>${kortNaam(winnaar)}</span> pakte de meeste punten in <span>${laaste}</span> met <span>${winPunten} pt</span>! ${kortNaam(verliezer.naam)} had een dagje om snel te vergeten (${verliezer.pts} pt 😬).`,
+    `🔥 Wat een race in <span>${laaste}</span>! <span>${kortNaam(winnaar)}</span> gaat er vandoor met <span>${winPunten} pt</span>. De rest mag de schade opmaken.`,
+    `🏎️ <span>${kortNaam(winnaar)}</span> domineert <span>${laaste}</span> met <span>${winPunten} pt</span>. <span>${kortNaam(s[0].naam)}</span> leidt het kampioenschap met ${s[0].punten} pt totaal.`,
+    `💥 <span>${laaste}</span> is voorbij! <span>${kortNaam(winnaar)}</span> scoorde het meest (<span>${winPunten} pt</span>). Het klassement blijft spannend!`,
+  ];
+  const reactie = templates[n % templates.length];
+  document.getElementById('reactie-wrap').innerHTML =
+    `<div class="reactie-banner">${reactie}</div>`;
+}
+
+// ── Circuit specialisten ──────────────────────────────────────
+
+function vulCircuitSpecialisten() {
+  const namen = Object.keys(POULE_DATA.spelers);
+  const rijen = POULE_DATA.races.map((race, i) => {
+    let beste = null, bestePts = -1;
+    namen.forEach(naam => {
+      const p = i === 0 ? POULE_DATA.spelers[naam][0] : POULE_DATA.spelers[naam][i] - POULE_DATA.spelers[naam][i - 1];
+      if (p > bestePts) { bestePts = p; beste = naam; }
+    });
+    const kleur = kleurVoor(beste);
+    return `<tr>
+      <td>${race}</td>
+      <td class="ct-winnaar"><span class="ct-dot" style="background:${kleur}"></span>${kortNaam(beste)}</td>
+      <td class="ct-pts">+${bestePts}</td>
+    </tr>`;
+  });
+  document.getElementById('circuit-tbody').innerHTML = rijen.join('');
+}
+
+// ── Persoonlijk rapport ───────────────────────────────────────
+
+function berekenRapport(naam) {
+  const n = POULE_DATA.races.length;
+  const s = stand();
+  const plek = s.findIndex(sp => sp.naam === naam) + 1;
+  const perRace = puntenPerRace(naam);
+  const namen = Object.keys(POULE_DATA.spelers);
+
+  // Consistentie (omgekeerde std, 0-100)
+  const gem = perRace.reduce((a, b) => a + b, 0) / perRace.length;
+  const std = Math.sqrt(perRace.reduce((a, b) => a + (b - gem) ** 2, 0) / perRace.length);
+  const maxStd = 15;
+  const consistentie = Math.max(0, Math.round((1 - std / maxStd) * 100));
+
+  // Ranking (omgekeerde plek)
+  const ranking = Math.round((1 - (plek - 1) / namen.length) * 100);
+
+  // Pieken (beste race t.o.v. max mogelijke in de poule)
+  const besteRace = Math.max(...perRace);
+  const absoluteBeste = Math.max(...namen.flatMap(n2 => puntenPerRace(n2)));
+  const pieken = Math.round(besteRace / absoluteBeste * 100);
+
+  // Trend (zijn laatste 3 races beter dan de 3 daarvoor?)
+  let trend = 50;
+  if (n >= 6) {
+    const recent = perRace.slice(-3).reduce((a, b) => a + b, 0) / 3;
+    const eerder = perRace.slice(-6, -3).reduce((a, b) => a + b, 0) / 3;
+    trend = eerder > 0 ? Math.min(100, Math.round(recent / eerder * 50)) : 50;
+  }
+
+  // Totaalscore → cijfer
+  const totaal = Math.round(consistentie * 0.3 + ranking * 0.4 + pieken * 0.2 + trend * 0.1);
+  let grade, kleur, tekst;
+  if (totaal >= 85)      { grade = 'S'; kleur = '#FFD24A'; tekst = 'Absolute topklasse. De rest kijkt op je neer.'; }
+  else if (totaal >= 70) { grade = 'A'; kleur = '#7CC576'; tekst = 'Uitstekend seizoen! Consistent en sterk.'; }
+  else if (totaal >= 55) { grade = 'B'; kleur = '#5B9BD5'; tekst = 'Solide prestaties. Ruimte voor verbetering.'; }
+  else if (totaal >= 40) { grade = 'C'; kleur = '#FF8A65'; tekst = 'Wisselvallig. Goede races, maar ook mindere.'; }
+  else                   { grade = 'D'; kleur = '#E10600'; tekst = 'Een lastig seizoen. Volgende race beter!'; }
+
+  return { grade, kleur, tekst, consistentie, ranking, pieken, trend };
+}
+
 // ── Stats tab ─────────────────────────────────────────────────
 
 function vulStats() {
+  vulReactie();
   vulStreak();
   vulDarkHorse();
   vulTrivia();
   vulPrognose();
+  vulCircuitSpecialisten();
 }
 
 function berekenStreaks() {
@@ -628,6 +765,20 @@ function openSpelerModal(naam) {
   document.getElementById('modal-totaal').textContent = totaal;
   document.getElementById('modal-beste').textContent = beste;
   document.getElementById('modal-gem').textContent = gem;
+  const rapport = berekenRapport(naam);
+  document.getElementById('modal-rapport').innerHTML = `
+    <div class="rapport-label">Seizoensrapport</div>
+    <div class="rapport-score">
+      <div class="rapport-grade" style="color:${rapport.kleur}">${rapport.grade}</div>
+      <div class="rapport-tekst">${rapport.tekst}</div>
+    </div>
+    <div class="rapport-bars">
+      <div class="rapport-row"><span class="rapport-row-label">Ranking</span><div class="rapport-row-bar-wrap"><div class="rapport-row-bar" style="width:${rapport.ranking}%;background:#FFD24A"></div></div><span class="rapport-row-val">${rapport.ranking}</span></div>
+      <div class="rapport-row"><span class="rapport-row-label">Consistentie</span><div class="rapport-row-bar-wrap"><div class="rapport-row-bar" style="width:${rapport.consistentie}%;background:#7CC576"></div></div><span class="rapport-row-val">${rapport.consistentie}</span></div>
+      <div class="rapport-row"><span class="rapport-row-label">Pieken</span><div class="rapport-row-bar-wrap"><div class="rapport-row-bar" style="width:${rapport.pieken}%;background:#5B9BD5"></div></div><span class="rapport-row-val">${rapport.pieken}</span></div>
+      <div class="rapport-row"><span class="rapport-row-label">Trend</span><div class="rapport-row-bar-wrap"><div class="rapport-row-bar" style="width:${rapport.trend}%;background:#FF8A65"></div></div><span class="rapport-row-val">${rapport.trend}</span></div>
+    </div>`;
+
   document.getElementById('modal-races').innerHTML = POULE_DATA.races.map((race, i) => `
     <div class="modal-race-row">
       <span class="modal-race-naam">${race}</span>
@@ -660,9 +811,11 @@ function vuurConfetti() {
 function init() {
   startCountdown();
   checkDeadlineBanner();
+  vulSeizoenOverzicht();
   vulStatCards();
   vulPodium();
   vulStand();
+  vulTijdlijn();
   vulStats();
   vulBadges();
   animeerKart();
