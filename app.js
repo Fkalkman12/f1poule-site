@@ -829,17 +829,33 @@ function vulOnhaalbaar() {
   const maxNogTeHalen = resterend * MAX_PTS_PER_RACE + BONUS_PTS;
   const onhaalbaar = gap > maxNogTeHalen;
 
+  // Realistisch maximum: hoogste ooit gescoorde race in deze poule
+  const maxOoit = Math.max(...Object.values(POULE_DATA.spelers).flatMap(punten =>
+    punten.map((p, i) => i === 0 ? p : p - punten[i - 1])
+  ));
+  const maxRealistisch = resterend * maxOoit + BONUS_PTS;
+  const realistischOnhaalbaar = gap > maxRealistisch;
+
   if (onhaalbaar) {
     wrap.innerHTML = `<div class="onhaalbaar-banner definitief">
       🏆 <span>${kortNaam(leider.naam)}</span> is wiskundig niet meer in te halen — poule gewonnen!
     </div>`;
+  } else if (realistischOnhaalbaar) {
+    wrap.innerHTML = `<div class="onhaalbaar-banner" style="border-color:rgba(124,197,118,0.3)">
+      <div class="oh-info">
+        <div class="oh-titel">✅ Praktisch gezien gewonnen</div>
+        <div class="oh-sub"><span>${kortNaam(leider.naam)}</span> is realistisch niet meer in te halen — <span>${kortNaam(nr2.naam)}</span> zou elke race een record moeten breken</div>
+        <div class="oh-sub2">Max ooit gescoord in deze poule: ${maxOoit} pt/race · nog ${resterend} races + 45 seizoensbonus</div>
+      </div>
+    </div>`;
   } else {
-    const nogNodig = maxNogTeHalen - gap + 1;
+    const nogNodigWisk = maxNogTeHalen - gap + 1;
+    const nogNodigReal = maxRealistisch - gap + 1;
     wrap.innerHTML = `<div class="onhaalbaar-banner">
       <div class="oh-info">
-        <div class="oh-titel">📐 Nog niet wiskundig beslist</div>
-        <div class="oh-sub"><span>${kortNaam(leider.naam)}</span> moet nog <span>${nogNodig} pt</span> uitlopen op <span>${kortNaam(nr2.naam)}</span> om zeker te zijn</div>
-        <div class="oh-sub2">${resterend} races resterend · max ${maxNogTeHalen} pt nog te verdelen incl. 45 seizoensbonus</div>
+        <div class="oh-titel">📐 Nog niet beslist</div>
+        <div class="oh-sub"><span>${kortNaam(nr2.naam)}</span> moet nog <span>${nogNodigReal} pt</span> goedmaken op <span>${kortNaam(leider.naam)}</span> (realistisch)</div>
+        <div class="oh-sub2">Wiskundig max: ${nogNodigWisk} pt nog nodig · ${resterend} races resterend · incl. 45 seizoensbonus</div>
       </div>
     </div>`;
   }
@@ -847,38 +863,44 @@ function vulOnhaalbaar() {
 
 // ── Voorspelling ──────────────────────────────────────────────
 
-function genereerVoorspelling() {
+function vulVoorspelling() {
+  const namen = Object.keys(POULE_DATA.spelers);
+  const sel = document.getElementById('voorspelling-select');
+  sel.innerHTML = '<option value="">— Kies een speler —</option>' +
+    namen.map(n => `<option value="${n}">${kortNaam(n)}</option>`).join('');
+
+  const opgeslagen = localStorage.getItem('poule_voorspelling');
+  if (opgeslagen) {
+    toonOpgeslagenVoorspelling(opgeslagen);
+  }
+}
+
+function toonOpgeslagenVoorspelling(naam) {
   const s = stand();
-  const n = POULE_DATA.races.length;
-  const { winnaarPerRace, huidigWinnaar, huidigStreak } = berekenStreaks();
-  const leider = s[0];
-  const nr2 = s[1];
-  const nr3 = s[2];
-  const hekkensluiter = s[s.length - 1];
-  const gap = leider.punten - nr2.punten;
-  const resterend = TOTAAL_RACES - n;
-  const maxNogTeHalen = resterend * MAX_PTS_PER_RACE + BONUS_PTS;
+  const plek = s.findIndex(sp => sp.naam === naam) + 1;
+  const kleur = kleurVoor(naam);
+  document.getElementById('voorspelling-kiezer').style.display = 'none';
+  document.getElementById('voorspelling-huidig').innerHTML = `
+    <div class="voorspelling-gedaan">
+      <div class="vg-emoji">🏆</div>
+      <div class="vg-tekst">
+        <strong>${kortNaam(naam)}</strong>
+        <p>Jouw tip · staat nu op plek ${plek} met ${s[plek-1]?.punten ?? '?'} pt</p>
+      </div>
+      <button class="vg-wijzig" onclick="wijzigVoorspelling()">Wijzigen</button>
+    </div>`;
+}
 
-  // Verzamel grappige sjablonen
-  const templates = [
-    `Na ${n} races lijkt het er sterk op dat <span>${kortNaam(leider.naam)}</span> dit gaat winnen — tenzij <span>${kortNaam(nr2.naam)}</span> plotseling ontdekt hoe F1 werkt.`,
-    `<span>${kortNaam(leider.naam)}</span> leidt met ${gap} punten. <span>${kortNaam(nr2.naam)}</span> zegt dat hij/zij "lekker bezig is". Wij betwijfelen dat.`,
-    `De poule heeft gesproken: <span>${kortNaam(hekkensluiter.naam)}</span> staat laatste. Misschien volgend seizoen beter voorspellen?`,
-    `<span>${kortNaam(leider.naam)}</span> is momenteel zo dominant dat zelfs Max Verstappen jaloers zou zijn. ${gap} punten voorsprong — respect.`,
-    `Als de trend doorzet wint <span>${kortNaam(leider.naam)}</span> met ${Math.round(leider.punten / n * TOTAAL_RACES)} punten. <span>${kortNaam(nr2.naam)}</span> krijgt een troostprijs.`,
-    huidigStreak >= 2
-      ? `<span>${kortNaam(huidigWinnaar)}</span> wint al ${huidigStreak} races op rij. Stopzetten mag niet — dit is entertainment.`
-      : `Elke race een andere winnaar. Niemand heeft de poule onder controle. Chaos regeert. <span>${kortNaam(leider.naam)}</span> profiteert.`,
-    gap > maxNogTeHalen / 2
-      ? `Met ${resterend} races te gaan en ${gap} punten achterstand wordt het voor <span>${kortNaam(nr2.naam)}</span> heel moeilijk. Gokje: <span>${kortNaam(leider.naam)}</span> wint dit.`
-      : `Het is nog ALLES mogelijk! <span>${kortNaam(nr2.naam)}</span> kan <span>${kortNaam(leider.naam)}</span> nog inhalen. Dit seizoen is nog lang niet voorbij!`,
-    `Onze supercomputer (een rekenmachine en wat koffie) voorspelt: <span>${kortNaam(leider.naam)}</span> 🥇, <span>${kortNaam(nr2.naam)}</span> 🥈, <span>${kortNaam(nr3.naam)}</span> 🥉.`,
-    `<span>${kortNaam(hekkensluiter.naam)}</span> staat onderaan maar geeft niet op. Bewondering. Misplaatste bewondering, maar toch.`,
-    `Statistisch gezien wint <span>${kortNaam(leider.naam)}</span>. Maar dit is een poule. Statistieken liegen. Waarschijnlijk.`,
-  ];
+function slaVoorspellingOp() {
+  const sel = document.getElementById('voorspelling-select');
+  if (!sel.value) return;
+  localStorage.setItem('poule_voorspelling', sel.value);
+  toonOpgeslagenVoorspelling(sel.value);
+}
 
-  const tekst = templates[Math.floor(Math.random() * templates.length)];
-  document.getElementById('voorspelling-tekst').innerHTML = tekst;
+function wijzigVoorspelling() {
+  document.getElementById('voorspelling-huidig').innerHTML = '';
+  document.getElementById('voorspelling-kiezer').style.display = 'block';
 }
 
 // ── Geluid ───────────────────────────────────────────────────
@@ -934,7 +956,7 @@ function init() {
   vulOnhaalbaar();
   vulTijdlijn();
   vulStats();
-  genereerVoorspelling();
+  vulVoorspelling();
   vulBadges();
   animeerKart();
   setTimeout(vuurConfetti, 800);

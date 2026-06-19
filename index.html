@@ -220,6 +220,15 @@
   .circuit-tabel td.ct-winnaar { display: flex; align-items: center; gap: 8px; }
   .ct-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
+  /* ── Voorspelling ── */
+  .voorspelling-gedaan { background: linear-gradient(90deg,rgba(255,210,74,0.1),rgba(225,6,0,0.08)); border: 1px solid rgba(255,210,74,0.25); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+  .vg-emoji { font-size: 32px; }
+  .vg-tekst { flex: 1; }
+  .vg-tekst strong { font-size: 16px; color: #FFD24A; }
+  .vg-tekst p { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+  .vg-wijzig { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+  .vg-wijzig:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
   /* ── Rapport ── */
   .rapport-sectie { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); }
   .rapport-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
@@ -368,9 +377,12 @@
     <div id="darkhorse-wrap"></div>
     <div class="panel" id="voorspelling-panel">
       <h2>🔮 Wie gaat er winnen?</h2>
-      <p class="panel-sub">Op basis van de huidige data</p>
-      <div id="voorspelling-tekst" style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.8);min-height:60px;margin-bottom:16px"></div>
-      <button onclick="genereerVoorspelling()" style="background:#e10600;border:none;color:#fff;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">🎲 Nieuwe voorspelling</button>
+      <p class="panel-sub">Doe jouw voorspelling — wordt lokaal opgeslagen op jouw telefoon</p>
+      <div id="voorspelling-huidig"></div>
+      <div id="voorspelling-kiezer">
+        <select id="voorspelling-select" class="h2h-select" style="margin-bottom:12px;width:100%"></select>
+        <button onclick="slaVoorspellingOp()" style="background:#e10600;border:none;color:#fff;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;width:100%">💾 Opslaan</button>
+      </div>
     </div>
     <div class="panel">
       <h2>🏁 Circuit specialisten</h2>
