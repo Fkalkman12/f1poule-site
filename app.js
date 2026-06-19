@@ -800,18 +800,31 @@ document.getElementById('speler-modal').addEventListener('click', e => {
 // ── Geluid ───────────────────────────────────────────────────
 
 const audio = new Audio('tu-tu-tu-du-max-verstappen.mp3');
-audio.loop = true;
+audio.loop = false;
+
+let geluidAfgespeeld = false;
+
+function speelGeluidEenmalig() {
+  if (geluidAfgespeeld) return;
+  geluidAfgespeeld = true;
+  audio.play().catch(() => {});
+}
+
+// Speel af bij eerste klik ergens op de pagina
+document.addEventListener('click', speelGeluidEenmalig, { once: true });
 
 function toggleGeluid() {
   const btn = document.getElementById('geluid-btn');
   if (audio.paused) {
+    geluidAfgespeeld = true;
+    audio.currentTime = 0;
     audio.play();
     btn.textContent = '🔊 Geluid';
     btn.classList.add('speelt');
   } else {
     audio.pause();
     audio.currentTime = 0;
-    btn.textContent = '🔇 Geluid';
+    btn.textContent = '🔇 Geluid aan';
     btn.classList.remove('speelt');
   }
 }
