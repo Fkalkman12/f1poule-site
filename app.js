@@ -797,6 +797,90 @@ document.getElementById('speler-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
+// ── Onhaalbaar countdown ──────────────────────────────────────
+
+const MAX_PTS_PER_RACE = 60;
+const BONUS_PTS = 45;
+const TOTAAL_RACES = 24;
+
+function vulOnhaalbaar() {
+  const s = stand();
+  const n = POULE_DATA.races.length;
+  const resterend = TOTAAL_RACES - n;
+  const leider = s[0];
+  const wrap = document.getElementById('onhaalbaar-wrap');
+
+  if (resterend <= 0) {
+    wrap.innerHTML = `<div class="onhaalbaar-banner definitief">
+      🏆 Het seizoen is voorbij! <span>${kortNaam(leider.naam)}</span> wint de poule!
+    </div>`;
+    return;
+  }
+
+  // Wie is al onhaalbaar voor de leider?
+  const onhaalbareDoor = s.slice(1).filter(sp => {
+    const gap = leider.punten - sp.punten;
+    return gap > (resterend * MAX_PTS_PER_RACE) + BONUS_PTS;
+  });
+
+  // Hoeveel punten moet nr2 nog inhalen, en is dat onmogelijk?
+  const nr2 = s[1];
+  const gap = leider.punten - nr2.punten;
+  const maxNogTeHalen = resterend * MAX_PTS_PER_RACE + BONUS_PTS;
+  const onhaalbaar = gap > maxNogTeHalen;
+
+  if (onhaalbaar) {
+    wrap.innerHTML = `<div class="onhaalbaar-banner definitief">
+      🏆 <span>${kortNaam(leider.naam)}</span> is wiskundig niet meer in te halen — poule gewonnen!
+    </div>`;
+  } else {
+    const nogNodig = maxNogTeHalen - gap + 1;
+    wrap.innerHTML = `<div class="onhaalbaar-banner">
+      <div class="oh-info">
+        <div class="oh-titel">📐 Nog niet wiskundig beslist</div>
+        <div class="oh-sub"><span>${kortNaam(leider.naam)}</span> moet nog <span>${nogNodig} pt</span> uitlopen op <span>${kortNaam(nr2.naam)}</span> om zeker te zijn</div>
+        <div class="oh-sub2">${resterend} races resterend · max ${maxNogTeHalen} pt nog te verdelen incl. 45 seizoensbonus</div>
+      </div>
+    </div>`;
+  }
+}
+
+// ── Voorspelling ──────────────────────────────────────────────
+
+function genereerVoorspelling() {
+  const s = stand();
+  const n = POULE_DATA.races.length;
+  const { winnaarPerRace, huidigWinnaar, huidigStreak } = berekenStreaks();
+  const leider = s[0];
+  const nr2 = s[1];
+  const nr3 = s[2];
+  const hekkensluiter = s[s.length - 1];
+  const gap = leider.punten - nr2.punten;
+  const resterend = TOTAAL_RACES - n;
+  const maxNogTeHalen = resterend * MAX_PTS_PER_RACE + BONUS_PTS;
+
+  // Verzamel grappige sjablonen
+  const templates = [
+    `Na ${n} races lijkt het er sterk op dat <span>${kortNaam(leider.naam)}</span> dit gaat winnen — tenzij <span>${kortNaam(nr2.naam)}</span> plotseling ontdekt hoe F1 werkt.`,
+    `<span>${kortNaam(leider.naam)}</span> leidt met ${gap} punten. <span>${kortNaam(nr2.naam)}</span> zegt dat hij/zij "lekker bezig is". Wij betwijfelen dat.`,
+    `De poule heeft gesproken: <span>${kortNaam(hekkensluiter.naam)}</span> staat laatste. Misschien volgend seizoen beter voorspellen?`,
+    `<span>${kortNaam(leider.naam)}</span> is momenteel zo dominant dat zelfs Max Verstappen jaloers zou zijn. ${gap} punten voorsprong — respect.`,
+    `Als de trend doorzet wint <span>${kortNaam(leider.naam)}</span> met ${Math.round(leider.punten / n * TOTAAL_RACES)} punten. <span>${kortNaam(nr2.naam)}</span> krijgt een troostprijs.`,
+    huidigStreak >= 2
+      ? `<span>${kortNaam(huidigWinnaar)}</span> wint al ${huidigStreak} races op rij. Stopzetten mag niet — dit is entertainment.`
+      : `Elke race een andere winnaar. Niemand heeft de poule onder controle. Chaos regeert. <span>${kortNaam(leider.naam)}</span> profiteert.`,
+    gap > maxNogTeHalen / 2
+      ? `Met ${resterend} races te gaan en ${gap} punten achterstand wordt het voor <span>${kortNaam(nr2.naam)}</span> heel moeilijk. Gokje: <span>${kortNaam(leider.naam)}</span> wint dit.`
+      : `Het is nog ALLES mogelijk! <span>${kortNaam(nr2.naam)}</span> kan <span>${kortNaam(leider.naam)}</span> nog inhalen. Dit seizoen is nog lang niet voorbij!`,
+    `Onze supercomputer (een rekenmachine en wat koffie) voorspelt: <span>${kortNaam(leider.naam)}</span> 🥇, <span>${kortNaam(nr2.naam)}</span> 🥈, <span>${kortNaam(nr3.naam)}</span> 🥉.`,
+    `<span>${kortNaam(hekkensluiter.naam)}</span> staat onderaan maar geeft niet op. Bewondering. Misplaatste bewondering, maar toch.`,
+    `Statistisch gezien wint <span>${kortNaam(leider.naam)}</span>. Maar dit is een poule. Statistieken liegen. Waarschijnlijk.`,
+  ];
+
+  const tekst = templates[Math.floor(Math.random() * templates.length)];
+  document.getElementById('voorspelling-tekst').innerHTML = tekst;
+}
+
 // ── Geluid ───────────────────────────────────────────────────
 
 const audio = new Audio('tu-tu-tu-du-max-verstappen.mp3');
@@ -847,8 +931,10 @@ function init() {
   vulStatCards();
   vulPodium();
   vulStand();
+  vulOnhaalbaar();
   vulTijdlijn();
   vulStats();
+  genereerVoorspelling();
   vulBadges();
   animeerKart();
   setTimeout(vuurConfetti, 800);

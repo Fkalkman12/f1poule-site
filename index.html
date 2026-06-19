@@ -178,6 +178,15 @@
   .geluid-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
   .geluid-btn.speelt { background: rgba(225,6,0,0.2); border-color: rgba(225,6,0,0.4); color: #fff; }
 
+  /* ── Onhaalbaar banner ── */
+  .onhaalbaar-banner { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; }
+  .onhaalbaar-banner.definitief { background: linear-gradient(90deg,rgba(255,210,74,0.12),rgba(225,6,0,0.08)); border-color: rgba(255,210,74,0.3); font-size: 15px; font-weight: 600; }
+  .onhaalbaar-banner.definitief span { color: #FFD24A; }
+  .oh-titel { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .oh-sub { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .oh-sub span { color: #FFD24A; font-weight: 600; }
+  .oh-sub2 { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
   /* ── Seizoensoverzicht ── */
   .seizoen-overzicht { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
   .seizoen-stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 18px; flex: 1; min-width: 120px; text-align: center; }
@@ -309,6 +318,7 @@
   <!-- TAB: Stand -->
   <div class="tab-inhoud actief" id="tab-stand">
     <div class="seizoen-overzicht" id="seizoen-overzicht"></div>
+    <div id="onhaalbaar-wrap"></div>
     <div class="grid">
       <div class="stat-card"><p class="label">Leider</p><p class="value gold" id="stat-leider">—</p></div>
       <div class="stat-card"><p class="label">Punten leider</p><p class="value" id="stat-punten">—</p></div>
@@ -356,6 +366,12 @@
     <div id="reactie-wrap"></div>
     <div id="streak-wrap"></div>
     <div id="darkhorse-wrap"></div>
+    <div class="panel" id="voorspelling-panel">
+      <h2>🔮 Wie gaat er winnen?</h2>
+      <p class="panel-sub">Op basis van de huidige data</p>
+      <div id="voorspelling-tekst" style="font-size:15px;line-height:1.7;color:rgba(255,255,255,0.8);min-height:60px;margin-bottom:16px"></div>
+      <button onclick="genereerVoorspelling()" style="background:#e10600;border:none;color:#fff;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer">🎲 Nieuwe voorspelling</button>
+    </div>
     <div class="panel">
       <h2>🏁 Circuit specialisten</h2>
       <p class="panel-sub">Wie won elke race dit seizoen?</p>
