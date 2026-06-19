@@ -953,7 +953,7 @@ function init() {
   vulStatCards();
   vulPodium();
   vulStand();
-  vulOnhaalbaar();
+
   vulTijdlijn();
   vulStats();
   vulVoorspelling();
