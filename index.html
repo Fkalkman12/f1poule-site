@@ -231,13 +231,14 @@
 
   /* ── Hall of Fame ── */
   .hof-lijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-  .hof-item { display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 16px 20px; }
+  .hof-item { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 14px 16px; }
   .hof-item.hof-recent { background: linear-gradient(90deg,rgba(255,210,74,0.1),rgba(225,6,0,0.06)); border-color: rgba(255,210,74,0.25); }
   .hof-item.hof-dubbelkampioen { border-color: rgba(255,210,74,0.15); }
   .hof-jaar { font-size: 13px; color: rgba(255,255,255,0.4); width: 36px; flex-shrink: 0; font-weight: 600; }
-  .hof-kroon { font-size: 24px; width: 32px; text-align: center; }
-  .hof-naam { font-size: 17px; font-weight: 700; flex: 1; }
-  .hof-badge { font-size: 11px; color: #FFD24A; background: rgba(255,210,74,0.1); border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+  .hof-kroon { font-size: 24px; width: 28px; text-align: center; flex-shrink: 0; }
+  .hof-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .hof-naam { font-size: 17px; font-weight: 700; }
+  .hof-badge { font-size: 11px; color: #FFD24A; background: rgba(255,210,74,0.1); border-radius: 20px; padding: 3px 10px; display: inline-block; align-self: flex-start; }
   .hof-badge:empty { display: none; }
   .hof-stats { display: flex; gap: 12px; }
   .hof-stat { flex: 1; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px; text-align: center; }
@@ -452,32 +453,27 @@
         <div class="hof-item hof-recent">
           <div class="hof-jaar">2025</div>
           <div class="hof-kroon">👑</div>
-          <div class="hof-naam">Christina</div>
-          <div class="hof-badge">Meest recente kampioen</div>
+          <div class="hof-info"><div class="hof-naam">Christina</div><div class="hof-badge">Meest recente kampioen</div></div>
         </div>
         <div class="hof-item">
           <div class="hof-jaar">2024</div>
           <div class="hof-kroon">🏆</div>
-          <div class="hof-naam">pkalkman</div>
-          <div class="hof-badge">2× kampioen</div>
+          <div class="hof-info"><div class="hof-naam">pkalkman</div><div class="hof-badge">2× kampioen</div></div>
         </div>
         <div class="hof-item">
           <div class="hof-jaar">2023</div>
           <div class="hof-kroon">🏆</div>
-          <div class="hof-naam">Dennisbommele</div>
-          <div class="hof-badge">Één keer was genoeg</div>
+          <div class="hof-info"><div class="hof-naam">Dennisbommele</div><div class="hof-badge">Één keer was genoeg</div></div>
         </div>
         <div class="hof-item hof-dubbelkampioen">
           <div class="hof-jaar">2022</div>
           <div class="hof-kroon">🏆</div>
-          <div class="hof-naam">pkalkman</div>
-          <div class="hof-badge">2× kampioen</div>
+          <div class="hof-info"><div class="hof-naam">pkalkman</div><div class="hof-badge">2× kampioen</div></div>
         </div>
         <div class="hof-item">
           <div class="hof-jaar">2021</div>
           <div class="hof-kroon">🏆</div>
-          <div class="hof-naam">Rob</div>
-          <div class="hof-badge">De grondlegger</div>
+          <div class="hof-info"><div class="hof-naam">Rob</div><div class="hof-badge">De grondlegger</div></div>
         </div>
       </div>
       <div class="hof-stats">
