@@ -229,6 +229,26 @@
   .vg-wijzig { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
   .vg-wijzig:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
+  /* ── Hall of Fame ── */
+  .hof-lijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .hof-item { display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 16px 20px; }
+  .hof-item.hof-recent { background: linear-gradient(90deg,rgba(255,210,74,0.1),rgba(225,6,0,0.06)); border-color: rgba(255,210,74,0.25); }
+  .hof-item.hof-dubbelkampioen { border-color: rgba(255,210,74,0.15); }
+  .hof-jaar { font-size: 13px; color: rgba(255,255,255,0.4); width: 36px; flex-shrink: 0; font-weight: 600; }
+  .hof-kroon { font-size: 24px; width: 32px; text-align: center; }
+  .hof-naam { font-size: 17px; font-weight: 700; flex: 1; }
+  .hof-badge { font-size: 11px; color: #FFD24A; background: rgba(255,210,74,0.1); border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+  .hof-badge:empty { display: none; }
+  .hof-stats { display: flex; gap: 12px; }
+  .hof-stat { flex: 1; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px; text-align: center; }
+  .hof-stat-val { display: block; font-size: 22px; font-weight: 700; color: #FFD24A; }
+  .hof-stat-lbl { display: block; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; text-transform: uppercase; }
+  .hof-huidig-top3 { display: flex; flex-direction: column; gap: 8px; }
+  .hof-huidig-rij { display: flex; align-items: center; gap: 12px; font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .hof-huidig-plek { width: 28px; font-size: 18px; }
+  .hof-huidig-naam { flex: 1; font-weight: 600; }
+  .hof-huidig-pts { font-weight: 700; color: rgba(255,255,255,0.7); }
+
   /* ── Rapport ── */
   .rapport-sectie { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); }
   .rapport-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
@@ -321,6 +341,7 @@
     <button class="tab-btn" data-tab="stats">🔥 Stats</button>
     <button class="tab-btn" data-tab="vergelijk">⚔️ Vergelijk</button>
     <button class="tab-btn" data-tab="badges">🏅 Badges</button>
+    <button class="tab-btn" data-tab="halloffame">🌟 Hall of Fame</button>
   </nav>
   <button class="geluid-btn" id="geluid-btn" onclick="toggleGeluid()">🔇</button>
 
@@ -419,6 +440,56 @@
       <h2>🏅 Achievements</h2>
       <p class="panel-sub">Verdiend op basis van prestaties dit seizoen</p>
       <div class="badges-grid" id="badges-grid"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Hall of Fame -->
+  <div class="tab-inhoud" id="tab-halloffame">
+    <div class="panel">
+      <h2>🌟 Hall of Fame</h2>
+      <p class="panel-sub">Winnaars van vorige seizoenen</p>
+      <div class="hof-lijst">
+        <div class="hof-item hof-recent">
+          <div class="hof-jaar">2025</div>
+          <div class="hof-kroon">👑</div>
+          <div class="hof-naam">Christina</div>
+          <div class="hof-badge">Meest recente kampioen</div>
+        </div>
+        <div class="hof-item">
+          <div class="hof-jaar">2024</div>
+          <div class="hof-kroon">🏆</div>
+          <div class="hof-naam">pkalkman</div>
+          <div class="hof-badge">2× kampioen</div>
+        </div>
+        <div class="hof-item">
+          <div class="hof-jaar">2023</div>
+          <div class="hof-kroon">🏆</div>
+          <div class="hof-naam">Dennisbommele</div>
+          <div class="hof-badge"></div>
+        </div>
+        <div class="hof-item hof-dubbelkampioen">
+          <div class="hof-jaar">2022</div>
+          <div class="hof-kroon">🏆</div>
+          <div class="hof-naam">pkalkman</div>
+          <div class="hof-badge">2× kampioen</div>
+        </div>
+        <div class="hof-item">
+          <div class="hof-jaar">2021</div>
+          <div class="hof-kroon">🏆</div>
+          <div class="hof-naam">Rob</div>
+          <div class="hof-badge">De grondlegger</div>
+        </div>
+      </div>
+      <div class="hof-stats">
+        <div class="hof-stat"><span class="hof-stat-val">2×</span><span class="hof-stat-lbl">pkalkman titels</span></div>
+        <div class="hof-stat"><span class="hof-stat-val">5</span><span class="hof-stat-lbl">seizoenen gespeeld</span></div>
+        <div class="hof-stat"><span class="hof-stat-val">4</span><span class="hof-stat-lbl">unieke kampioenen</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>🏎️ 2026 — In progress</h2>
+      <p class="panel-sub">Wie voegt zijn naam toe aan de lijst?</p>
+      <div id="hof-huidig"></div>
     </div>
   </div>
 

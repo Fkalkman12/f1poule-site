@@ -903,6 +903,21 @@ function wijzigVoorspelling() {
   document.getElementById('voorspelling-kiezer').style.display = 'block';
 }
 
+// ── Hall of Fame ──────────────────────────────────────────────
+
+function vulHofHuidig() {
+  const s = stand();
+  const emojis = ['🥇','🥈','🥉'];
+  document.getElementById('hof-huidig').innerHTML = `<div class="hof-huidig-top3">` +
+    s.slice(0, 3).map((sp, i) => `
+      <div class="hof-huidig-rij">
+        <span class="hof-huidig-plek">${emojis[i]}</span>
+        <span class="hof-huidig-naam">${kortNaam(sp.naam)}</span>
+        <span class="hof-huidig-pts">${sp.punten} pt</span>
+      </div>`).join('') +
+    `</div><p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:12px">${POULE_DATA.races.length} van 24 races gereden</p>`;
+}
+
 // ── Geluid ───────────────────────────────────────────────────
 
 const audio = new Audio('tu-tu-tu-du-max-verstappen.mp3');
@@ -957,6 +972,7 @@ function init() {
   vulTijdlijn();
   vulStats();
   vulVoorspelling();
+  vulHofHuidig();
   vulBadges();
   animeerKart();
   setTimeout(vuurConfetti, 800);
