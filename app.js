@@ -797,6 +797,25 @@ document.getElementById('speler-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
+// ── Geluid ───────────────────────────────────────────────────
+
+const audio = new Audio('tu-tu-tu-du-max-verstappen.mp3');
+audio.loop = true;
+
+function toggleGeluid() {
+  const btn = document.getElementById('geluid-btn');
+  if (audio.paused) {
+    audio.play();
+    btn.textContent = '🔊 Geluid';
+    btn.classList.add('speelt');
+  } else {
+    audio.pause();
+    audio.currentTime = 0;
+    btn.textContent = '🔇 Geluid';
+    btn.classList.remove('speelt');
+  }
+}
+
 // ── Confetti ──────────────────────────────────────────────────
 
 function vuurConfetti() {
